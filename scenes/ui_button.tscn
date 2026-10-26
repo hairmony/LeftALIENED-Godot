@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://jc5fdv3ufugl"]
+
+[ext_resource type="Theme" uid="uid://r4ha0qas57o7" path="res://assets/ui/button_theme.tres" id="1_theme"]
+
+[node name="UiButton" type="Button" unique_id=751755102]
+offset_right = 110.0
+offset_bottom = 28.0
+theme = ExtResource("1_theme")
+text = "Button"

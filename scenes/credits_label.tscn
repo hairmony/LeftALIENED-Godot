@@ -1,0 +1,213 @@
+[gd_scene format=3 uid="uid://book6e4gp83or"]
+
+[ext_resource type="Script" uid="uid://cc2wtqasev7le" path="res://addons/maaacks_credits_scene/base/nodes/labels/credits_label.gd" id="1_label"]
+
+[node name="CreditsLabel" type="RichTextLabel" unique_id=90749284]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+theme_override_font_sizes/normal_font_size = 16
+bbcode_enabled = true
+text = "[center]
+
+
+
+[font_size=24]\"War does not determine who is right... 
+only who is [/font_size][font_size=36]LEFT[/font_size][font_size=24].\"[/font_size]
+
+[font_size=18]Betrand Russell[/font_size]
+
+
+
+
+
+
+
+
+
+
+[img=120]res://assets/logos/StudioLogo.png[/img]
+[font_size=18]presents[/font_size]
+
+
+
+[img=480]res://assets/logos/Logo.png[/img]
+
+
+
+
+
+[font_size=24]PROGRAMMERS[/font_size]
+
+
+[font_size=20]CORE PROGRAMMER[/font_size]
+Hari Vallath
+
+
+
+[font_size=24]ART & SOUND DESIGN[/font_size]
+
+
+[font_size=20]ART & SOUND DESIGNER[/font_size]
+Hari Vallath
+
+
+[font_size=20]SPRITES[/font_size]
+LinkNinja via itch.io
+Hari Vallath
+
+
+[font_size=20]LEVEL BACKGROUND[/font_size]
+Screaming Brain Studios via OpenGameArt.org
+
+
+[font_size=20]CONCEPT ARTIST[/font_size]
+Hari Vallath
+Kego Wigwas
+
+
+
+[font_size=24]MUSIC[/font_size]
+
+
+[font_size=20]Mysteries[/font_size]
+by Infrared Scale
+
+[font_size=20]The Final Battle[/font_size]
+by Infrared Scale
+
+[font_size=20]Space Game Intro[/font_size]
+by Eric Matyas
+soundimage.org
+
+[font_size=20]Light Years[/font_size]
+by Eric Matyas
+soundimage.org
+
+
+
+[font_size=20]SOUND EFFECTS[/font_size]
+Driken5482 via Pixabay
+freesound_community via Pixabay
+Data_pion via Pixabay
+
+
+
+
+
+[font_size=18]Based on[/font_size]
+[img=240]res://assets/logos/LogoOld.png[/img]
+
+
+
+[font_size=24]PROGRAMMERS[/font_size]
+
+
+[font_size=20]CORE PROGRAMMERS[/font_size]
+Kego Wigwas
+Hari Vallath
+
+[font_size=20]ADDITIONAL PROGRAMMERS[/font_size]
+Hari Vallath
+Kego Wigwas
+
+[font_size=20]UI PROGRAMMERS[/font_size]
+Niraaj Harshadan
+Nihar Poojari
+
+
+
+[font_size=24]ART & SOUND DESIGN[/font_size]
+
+
+[font_size=20]ART & SOUND DESIGNER[/font_size]
+Niraaj Harshadan
+
+
+[font_size=20]MENU BACKGROUND[/font_size]
+NASA/JPL Caltech
+
+
+[font_size=24]MUSIC[/font_size]
+
+
+[font_size=20]MAZE[/font_size]
+by Density & Time
+
+
+[font_size=20]CONCEPT ARTIST[/font_size]
+Kego Wigwas
+
+
+
+[font_size=24]PROJECT MANAGER[/font_size]
+Hari Vallath
+
+
+
+[font_size=24]DOCUMENTATION[/font_size]
+Hari Vallath
+Kego Wigwas
+
+
+
+[font_size=24]QUALITY ANALYSIS[/font_size]
+Kego Wigwas
+Hari Vallath
+
+
+
+
+
+Created for
+Lakehead University
+COMP-4478-FA Game Programming
+Dr. Sabah Mohammed
+2025
+
+
+
+
+
+[font_size=24]TOOLS[/font_size]
+
+
+[font_size=20]GODOT[/font_size]
+[img=80]res://addons/maaacks_credits_scene/examples/assets/godot_engine_logo/logo_vertical_color_dark.png[/img]
+
+Author: [url=https://godotengine.org/contact]Juan Linietsky, Ariel Manzur, and contributors[/url]
+Source: [url=https://godotengine.org/]godotengine.org[/url]
+License: [url=https://github.com/godotengine/godot/blob/master/LICENSE.txt]MIT License[/url]
+
+
+[font_size=20]MAAACK'S CREDITS SCENE[/font_size]
+[img=80]res://addons/maaacks_credits_scene/examples/assets/plugin_logo/logo.png[/img]
+
+Author: [url=https://github.com/Maaack/Godot-Credits-Scene/graphs/contributors]Marek Belski and contributors[/url]
+Source: [url=https://github.com/Maaack/Godot-Credits-Scene]github: Godot-Credits-Scene[/url]
+License: [url=https://github.com/Maaack/Godot-Credits-Scene/blob/main/LICENSE.txt]MIT License[/url]
+
+
+[font_size=20]GIT[/font_size]
+[img=80]res://addons/maaacks_credits_scene/examples/assets/git_logo/Git-Logo-2Color.png[/img]
+
+Author: [url=https://github.com/torvalds]Linus Torvalds[/url]
+Source: [url=https://git-scm.com/downloads]git-scm.com[/url]
+License: [url=https://opensource.org/licenses/GPL-2.0]GNU General Public License version 2[/url]
+[/center]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+script = ExtResource("1_label")
+auto_update = false
+h1_font_size = 36
+h2_font_size = 28
+h3_font_size = 24
+h4_font_size = 20
+h5_font_size = 16
+h6_font_size = 16
+max_image_width = 80

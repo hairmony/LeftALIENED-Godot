@@ -1,0 +1,114 @@
+[gd_scene format=3 uid="uid://do1snn50fttv4"]
+
+[ext_resource type="Script" uid="uid://dwp5tijkt1i6h" path="res://scripts/pause_state.gd" id="1_pause"]
+[ext_resource type="PackedScene" path="res://scenes/ui_button.tscn" id="2_btn"]
+
+[node name="PauseState" type="CanvasLayer" unique_id=1020916425]
+process_mode = 3
+layer = 10
+script = ExtResource("1_pause")
+
+[node name="UI" type="Control" parent="." unique_id=461834261]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 640.0
+offset_bottom = 360.0
+mouse_filter = 2
+
+[node name="Dim" type="ColorRect" parent="UI" unique_id=2083836959]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 360.0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.49019608)
+
+[node name="PauseText" type="Label" parent="UI" unique_id=1340408689]
+layout_mode = 0
+offset_top = 100.0
+offset_right = 640.0
+offset_bottom = 140.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 36
+text = "PAUSED"
+horizontal_alignment = 1
+
+[node name="ContinueButton" parent="UI" unique_id=1172786611 instance=ExtResource("2_btn")]
+layout_mode = 0
+offset_left = 260.0
+offset_right = 380.0
+offset_top = 180.0
+offset_bottom = 208.0
+text = "Continue"
+
+[node name="RestartButton" parent="UI" unique_id=1128173640 instance=ExtResource("2_btn")]
+layout_mode = 0
+offset_left = 260.0
+offset_top = 212.0
+offset_right = 380.0
+offset_bottom = 240.0
+text = "Restart"
+
+[node name="OptionsButton" parent="UI" unique_id=1444151507 instance=ExtResource("2_btn")]
+layout_mode = 0
+offset_left = 260.0
+offset_top = 244.0
+offset_right = 380.0
+offset_bottom = 272.0
+text = "Options"
+
+[node name="HowToPlayButton" parent="UI" unique_id=1847291641 instance=ExtResource("2_btn")]
+layout_mode = 0
+offset_left = 260.0
+offset_top = 276.0
+offset_right = 380.0
+offset_bottom = 304.0
+text = "How To Play"
+
+[node name="RulesPanel" type="ColorRect" parent="UI" unique_id=1847291642]
+visible = false
+layout_mode = 0
+offset_left = 384.0
+offset_right = 640.0
+offset_bottom = 360.0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.5)
+
+[node name="RulesText" type="Label" parent="UI" unique_id=1847291643]
+visible = false
+layout_mode = 0
+offset_left = 394.0
+offset_top = 40.0
+offset_right = 630.0
+offset_bottom = 340.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "HOW TO PLAY:
+
+1. WASD to move
+2. LMB to shoot
+3. SHIFT/RMB to dodge
+4. SPACE to use SUPER
+5. Hit asteroids/enemies to charge SUPER
+6. Destroy the asteroid shower
+7. Clear the enemy drones to advance
+8. Defeat ENEMY LEADERs to gain HP
+9. Defeat all ENEMY LEADERS to WIN!
+10. R to restart
+11. ESC to pause
+
+Press 'How To Play' to close panel."
+autowrap_mode = 3
+
+[node name="ExitButton" parent="UI" unique_id=888310570 instance=ExtResource("2_btn")]
+layout_mode = 0
+offset_left = 260.0
+offset_top = 308.0
+offset_right = 380.0
+offset_bottom = 336.0
+text = "Exit"
+
+[connection signal="pressed" from="UI/ContinueButton" to="." method="onContinue"]
+[connection signal="pressed" from="UI/OptionsButton" to="." method="onOptions"]
+[connection signal="pressed" from="UI/RestartButton" to="." method="onRestart"]
+[connection signal="pressed" from="UI/HowToPlayButton" to="." method="showRules"]
+[connection signal="pressed" from="UI/ExitButton" to="." method="onExit"]

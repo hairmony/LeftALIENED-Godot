@@ -1,0 +1,110 @@
+[gd_scene format=3 uid="uid://bxgamjsiwysaj"]
+
+[ext_resource type="Script" uid="uid://c2oavb4q01qo" path="res://scripts/play_state.gd" id="1_play"]
+[ext_resource type="Texture2D" uid="uid://dn4y4c305uhd8" path="res://assets/images/LevelBackground.png" id="2_bg"]
+[ext_resource type="PackedScene" path="res://scenes/touch_controls.tscn" id="3_touch"]
+
+[node name="PlayState" type="Node2D" unique_id=1455872738]
+script = ExtResource("1_play")
+
+[node name="Backdrop" type="Sprite2D" parent="." unique_id=413860673]
+texture_filter = 1
+position = Vector2(-45.714, 0)
+scale = Vector2(1.428571, 1.428571)
+texture = ExtResource("2_bg")
+centered = false
+
+[node name="Backdrop2" type="Sprite2D" parent="." unique_id=1527014272]
+texture_filter = 1
+position = Vector2(-45.714, -731.429)
+scale = Vector2(1.428571, 1.428571)
+texture = ExtResource("2_bg")
+centered = false
+
+[node name="Actors" type="Node2D" parent="." unique_id=1385194107]
+
+[node name="TouchControls" parent="." instance=ExtResource("3_touch")]
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=416350179]
+
+[node name="UI" type="Control" parent="HUD" unique_id=1735770479]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 640.0
+offset_bottom = 360.0
+mouse_filter = 2
+
+[node name="ScoreText" type="Label" parent="HUD/UI" unique_id=92670197]
+layout_mode = 0
+offset_left = 25.0
+offset_top = 25.0
+offset_right = 220.0
+offset_bottom = 45.0
+theme_override_font_sizes/font_size = 20
+text = "Score: 0"
+
+[node name="MultiplierText" type="Label" parent="HUD/UI" unique_id=947558354]
+visible = false
+layout_mode = 0
+offset_left = 230.0
+offset_top = 25.0
+offset_right = 320.0
+offset_bottom = 45.0
+theme_override_font_sizes/font_size = 20
+text = "2x"
+
+[node name="MultishotText" type="Label" parent="HUD/UI" unique_id=120601706]
+layout_mode = 0
+offset_left = 25.0
+offset_top = 45.0
+offset_right = 220.0
+offset_bottom = 65.0
+theme_override_font_sizes/font_size = 20
+text = "Super: 0/20"
+
+[node name="HealthText" type="Label" parent="HUD/UI" unique_id=1575744188]
+layout_mode = 0
+offset_left = 25.0
+offset_top = 315.0
+offset_right = 220.0
+offset_bottom = 335.0
+theme_override_font_sizes/font_size = 20
+text = "Armor: 3"
+
+[node name="GameOverText" type="Label" parent="HUD/UI" unique_id=1885239051]
+visible = false
+layout_mode = 0
+offset_top = 180.0
+offset_right = 640.0
+offset_bottom = 220.0
+theme_override_font_sizes/font_size = 36
+text = "Transmission Lost"
+horizontal_alignment = 1
+
+[node name="GameWonText" type="Label" parent="HUD/UI" unique_id=675189630]
+visible = false
+layout_mode = 0
+offset_top = 180.0
+offset_right = 640.0
+offset_bottom = 220.0
+theme_override_font_sizes/font_size = 36
+text = "Sector Secured"
+horizontal_alignment = 1
+
+[node name="WaveText" type="Label" parent="HUD/UI" unique_id=1402993932]
+layout_mode = 0
+offset_top = 130.0
+offset_right = 640.0
+offset_bottom = 156.0
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+
+[node name="ControlsText" type="Label" parent="HUD/UI" unique_id=615244748]
+visible = false
+layout_mode = 0
+offset_top = 328.0
+offset_right = 640.0
+offset_bottom = 350.0
+theme_override_font_sizes/font_size = 16
+text = "SPACE to Super"
+horizontal_alignment = 1

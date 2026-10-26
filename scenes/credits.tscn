@@ -1,0 +1,58 @@
+[gd_scene format=3 uid="uid://v1fbci6wtycn"]
+
+[ext_resource type="Script" uid="uid://qrp63g24indq" path="res://scripts/credits_state.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://book6e4gp83or" path="res://scenes/credits_label.tscn" id="2_label"]
+[ext_resource type="PackedScene" path="res://scenes/ui_button.tscn" id="3_btn"]
+
+[node name="Credits" type="Control" unique_id=1368551242]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 640.0
+offset_bottom = 360.0
+script = ExtResource("1_script")
+auto_scroll_speed = 30.0
+input_scroll_speed = 200.0
+scroll_restart_delay = 0.25
+
+[node name="Background" type="ColorRect" parent="." unique_id=2133080174]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 360.0
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=1536131328]
+unique_name_in_owner = true
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 360.0
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer" unique_id=214118888]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HeaderSpace" type="Control" parent="ScrollContainer/VBoxContainer" unique_id=961325809]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 360)
+layout_mode = 2
+
+[node name="CreditsLabel" parent="ScrollContainer/VBoxContainer" unique_id=1946578151 instance=ExtResource("2_label")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="FooterSpace" type="Control" parent="ScrollContainer/VBoxContainer" unique_id=509849915]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 360)
+layout_mode = 2
+
+[node name="BackButton" parent="." unique_id=617687213 instance=ExtResource("3_btn")]
+layout_mode = 0
+offset_left = 25.0
+offset_top = 308.0
+offset_right = 135.0
+offset_bottom = 336.0
+text = "Back"
+
+[connection signal="pressed" from="BackButton" to="." method="backToMenu"]

@@ -1,0 +1,119 @@
+[gd_scene format=3 uid="uid://b3fsvm7ohrfgm"]
+
+[ext_resource type="PackedScene" uid="uid://bxgamjsiwysaj" path="res://scenes/play.tscn" id="1_play"]
+[ext_resource type="Script" uid="uid://clm35oq4xiih3" path="res://scripts/endless_state.gd" id="2_endless"]
+[ext_resource type="PackedScene" path="res://scenes/ui_button.tscn" id="3_btn"]
+
+[node name="PlayState" unique_id=586794702 instance=ExtResource("1_play")]
+script = ExtResource("2_endless")
+ENDLESS_XP_RAMP_PERCENT = 1.05
+ENDLESS_SUPER_CHARGE_MIN = 16.0
+ENDLESS_SUPER_SHOTS_RAMP = 1.0
+ENDLESS_SUPER_SHOTS_CAP = 16.0
+ENDLESS_SUPER_PEN_RAMP = 0.25
+ENDLESS_SUPER_PEN_CAP = 4.0
+ENDLESS_SUPER_CHARGE_START = 30.0
+ENDLESS_SUPER_SHOTS_START = 4.0
+ENDLESS_SUPER_PEN_START = 0.0
+ENDLESS_GUNS_RAMP = 2.0
+ENDLESS_GUNS_CAP = 32.0
+ENDLESS_ARMOR_START = 1
+ENDLESS_ARMOR_CAP = -1
+ENDLESS_DRONE_CAP = 8
+ENDLESS_ENEMY_INTERVAL = 0.25
+ENDLESS_ASTEROID_INTERVAL = 0.5
+ENDLESS_MAX_ENEMIES = 2
+ENDLESS_MAX_ASTEROIDS = 4
+ENDLESS_RAMP_TIME = 45.0
+ENDLESS_ENEMY_INTERVAL_RAMP = 0.45
+ENDLESS_ASTEROID_INTERVAL_RAMP = 0.2
+ENDLESS_MAX_ENEMIES_CAP = 45
+ENDLESS_MAX_ASTEROIDS_RAMP = 1
+ENDLESS_MAX_ASTEROIDS_CAP = 15
+
+[node name="XpBar" type="ColorRect" parent="HUD/UI" parent_id_path=PackedInt32Array(1735770479) index="8" unique_id=1530735562]
+layout_mode = 0
+offset_left = 220.0
+offset_top = 31.0
+offset_right = 420.0
+offset_bottom = 39.0
+mouse_filter = 2
+color = Color(0.12, 0.12, 0.12, 1)
+
+[node name="Fill" type="ColorRect" parent="HUD/UI/XpBar" index="0" unique_id=1426895847]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.807843, 0.098039, 0.129412, 1)
+
+[node name="XpLevel" type="Label" parent="HUD/UI" parent_id_path=PackedInt32Array(1735770479) index="9" unique_id=631428629]
+layout_mode = 0
+offset_left = 116.0
+offset_top = 25.0
+offset_right = 216.0
+offset_bottom = 45.0
+theme_override_colors/font_color = Color(0.9231838, 0.92074907, 0.9167248, 1)
+theme_override_font_sizes/font_size = 20
+text = "LVL 0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="TimerText" type="Label" parent="HUD/UI" parent_id_path=PackedInt32Array(1735770479) index="10" unique_id=1135700906]
+layout_mode = 0
+offset_left = 220.0
+offset_top = 45.0
+offset_right = 420.0
+offset_bottom = 65.0
+theme_override_font_sizes/font_size = 20
+text = "0:00"
+horizontal_alignment = 1
+
+[node name="LevelUp" type="Control" parent="HUD/UI" parent_id_path=PackedInt32Array(1735770479) index="11" unique_id=706472225]
+visible = false
+anchors_preset = 0
+offset_right = 640.0
+offset_bottom = 360.0
+mouse_filter = 2
+
+[node name="SuperButton" parent="HUD/UI/LevelUp" index="0" unique_id=1580986423 instance=ExtResource("3_btn")]
+layout_mode = 0
+offset_left = 136.0
+offset_top = 166.0
+offset_right = 256.0
+offset_bottom = 194.0
+text = "SUPER"
+
+[node name="GunsButton" parent="HUD/UI/LevelUp" index="1" unique_id=1210446616 instance=ExtResource("3_btn")]
+layout_mode = 0
+offset_left = 260.0
+offset_top = 166.0
+offset_right = 380.0
+offset_bottom = 194.0
+text = "GUNS"
+
+[node name="DroneButton" parent="HUD/UI/LevelUp" index="2" unique_id=952401448 instance=ExtResource("3_btn")]
+layout_mode = 0
+offset_left = 384.0
+offset_top = 166.0
+offset_right = 504.0
+offset_bottom = 194.0
+text = "DRONE"
+
+[node name="XpCount" type="Label" parent="HUD/UI" parent_id_path=PackedInt32Array(1735770479) index="12" unique_id=1847291633]
+layout_mode = 0
+offset_left = 424.0
+offset_top = 25.0
+offset_right = 560.0
+offset_bottom = 45.0
+theme_override_colors/font_color = Color(0.9231838, 0.92074907, 0.9167248, 1)
+theme_override_font_sizes/font_size = 20
+text = "0/50"
+vertical_alignment = 1
+
+[connection signal="pressed" from="HUD/UI/LevelUp/SuperButton" to="." method="_pick_super"]
+[connection signal="pressed" from="HUD/UI/LevelUp/GunsButton" to="." method="_pick_guns"]
+[connection signal="pressed" from="HUD/UI/LevelUp/DroneButton" to="." method="_pick_drone"]

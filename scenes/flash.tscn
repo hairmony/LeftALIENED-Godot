@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bk8mtpy4otxjl"]
+
+[node name="Flash" type="ColorRect" unique_id=70370275]
+offset_right = 640.0
+offset_bottom = 360.0
+mouse_filter = 2

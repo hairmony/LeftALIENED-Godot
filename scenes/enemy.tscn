@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemy.gd" id="1_enemy"]
+[ext_resource type="Texture2D" path="res://assets/images/Enemy.png" id="2_enemy"]
+
+[node name="Enemy" type="Node2D"]
+script = ExtResource("1_enemy")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture_filter = 1
+position = Vector2(16, 16)
+rotation = 3.1415927
+texture = ExtResource("2_enemy")
+hframes = 4

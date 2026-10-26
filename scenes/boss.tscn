@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/boss.gd" id="1_boss"]
+[ext_resource type="Texture2D" path="res://assets/images/Boss.png" id="2_boss"]
+
+[node name="Boss" type="Node2D"]
+position = Vector2(288, -100)
+script = ExtResource("1_boss")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture_filter = 1
+position = Vector2(32, 32)
+texture = ExtResource("2_boss")

@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/images/Ship.png" id="1_ship"]
+
+[node name="DodgeTrail" type="Sprite2D"]
+modulate = Color(1, 1, 1, 0.2)
+texture_filter = 1
+scale = Vector2(1.1, 1.1)
+texture = ExtResource("1_ship")

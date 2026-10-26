@@ -1,0 +1,67 @@
+[gd_scene format=3 uid="uid://b4pfhglxegpne"]
+
+[ext_resource type="Script" uid="uid://bq2wetfw7057t" path="res://scripts/touch_controls.gd" id="1_touch"]
+[ext_resource type="Script" uid="uid://bs75qeip8jwds" path="res://scripts/touch_stick.gd" id="2_stick"]
+[ext_resource type="PackedScene" uid="uid://jc5fdv3ufugl" path="res://scenes/ui_button.tscn" id="3_btn"]
+[ext_resource type="Texture2D" uid="uid://dtjgupr4afkqe" path="res://assets/ui/Dodge.png" id="4_dodge"]
+[ext_resource type="Texture2D" uid="uid://df46f3e70ahuf" path="res://assets/ui/Super.png" id="5_super"]
+
+[node name="TouchControls" type="CanvasLayer" unique_id=1046092892]
+layer = 5
+script = ExtResource("1_touch")
+
+[node name="UI" type="Control" parent="." unique_id=1817842403]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 640.0
+offset_bottom = 360.0
+mouse_filter = 2
+
+[node name="MoveZone" type="Control" parent="UI" unique_id=1538939035]
+anchors_preset = 0
+offset_left = 5.0
+offset_top = 107.0
+offset_right = 215.0
+offset_bottom = 327.0
+script = ExtResource("2_stick")
+
+[node name="AimZone" type="Control" parent="UI" unique_id=277350056]
+anchors_preset = 0
+offset_left = 425.0
+offset_top = 107.0
+offset_right = 635.0
+offset_bottom = 327.0
+script = ExtResource("2_stick")
+
+[node name="DodgeButton" parent="UI" unique_id=694560326 instance=ExtResource("3_btn")]
+layout_mode = 0
+offset_left = 163.0
+offset_top = 274.0
+offset_right = 215.0
+offset_bottom = 326.0
+text = ""
+icon = ExtResource("4_dodge")
+icon_alignment = 1
+
+[node name="SuperButton" parent="UI" unique_id=93480077 instance=ExtResource("3_btn")]
+layout_mode = 0
+offset_left = 425.0
+offset_top = 274.0
+offset_right = 477.0
+offset_bottom = 326.0
+text = ""
+icon = ExtResource("5_super")
+icon_alignment = 1
+
+[node name="PauseButton" parent="UI" unique_id=368033615 instance=ExtResource("3_btn")]
+layout_mode = 0
+offset_left = 510.0
+offset_top = 16.0
+offset_right = 620.0
+offset_bottom = 44.0
+text = "Pause"
+
+[connection signal="button_down" from="UI/DodgeButton" to="." method="_on_dodge_down"]
+[connection signal="button_up" from="UI/DodgeButton" to="." method="_on_dodge_up"]
+[connection signal="button_down" from="UI/SuperButton" to="." method="_on_super_down"]
+[connection signal="button_down" from="UI/PauseButton" to="." method="_on_pause_down"]

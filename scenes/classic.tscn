@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://c6yrxk7nh645j"]
+
+[ext_resource type="PackedScene" uid="uid://bxgamjsiwysaj" path="res://scenes/play.tscn" id="1_play"]
+[ext_resource type="Script" uid="uid://bg7agnhai2t6a" path="res://scripts/classic_state.gd" id="2_classic"]
+
+[node name="PlayState" unique_id=496385625 instance=ExtResource("1_play")]
+script = ExtResource("2_classic")
+FINAL_WAVE = 12
+SPAWN_RATE = 0.5
+SECTOR_FLASH_SPEED = 3.0
+SECTOR_CLEAR_TIME = 3.0
+SECTOR_FADE_TIME = 10.0
+ENDLESS_SUPER_SHOTS_CAP = -1.0
+ENDLESS_SUPER_PEN_CAP = 6.0
+ENDLESS_GUNS_RAMP = 0.65
+ENDLESS_GUNS_CAP = -1.0
+ENDLESS_ARMOR_CAP = -1
+ENDLESS_MAX_ENEMIES_CAP = -1
+ENDLESS_MAX_ASTEROIDS_CAP = -1
+ENDLESS_ENEMY_SPEED_RAMP = 1
+ENDLESS_ASTEROID_SPEED_RAMP = 2
+
+[node name="XpBar" type="ColorRect" parent="HUD/UI" parent_id_path=PackedInt32Array(1735770479) index="0" unique_id=952263543]
+visible = false
+layout_mode = 0
+offset_left = 220.0
+offset_top = 14.0
+offset_right = 420.0
+offset_bottom = 22.0
+mouse_filter = 2
+color = Color(0.12, 0.12, 0.12, 1)
+
+[node name="Fill" type="ColorRect" parent="HUD/UI/XpBar" index="0" unique_id=564693629]
+layout_mode = 0
+offset_bottom = 8.0
+mouse_filter = 2
+color = Color(0.807843, 0.098039, 0.129412, 1)
+
+[node name="TimerText" type="Label" parent="HUD/UI" parent_id_path=PackedInt32Array(1735770479) index="1" unique_id=178362479]
+visible = false
+layout_mode = 0
+offset_left = 220.0
+offset_top = 25.0
+offset_right = 420.0
+offset_bottom = 45.0
+theme_override_font_sizes/font_size = 20
+text = "0:00"
+horizontal_alignment = 1
