@@ -15,8 +15,6 @@ const NAMES: Array[String] = [
 
 static var listening: bool = false
 static var _listener: ControlsState
-static var _slots: Dictionary = {}
-static var _defaults: Dictionary = {}
 
 var on_closed := Callable()
 var _listen_action: String = ""
@@ -33,69 +31,46 @@ var _ui_button: PackedScene
 @onready var gamepad_rows: VBoxContainer = $UI/Tabs/Gamepad/Rows
 
 
-static func capture_defaults() -> void:
-	if not _defaults.is_empty():
-		return
-	_read_map_into(_defaults)
-
-
 static func load_bindings() -> void:
-	capture_defaults()
-	_read_map_into(_slots)
 	var cf := ConfigFile.new()
-	if cf.load(SAVE_PATH) != OK or not cf.has_section("controls"):
-		_apply_all()
-		GuideControls.install()
-		return
-	for action in ACTIONS:
-		if not cf.has_section_key("controls", action):
-			continue
-		var parts: PackedStringArray = str(cf.get_value("controls", action)).split("|")
-		var row: Array = [null, null, null, null]
-		for i in mini(4, parts.size()):
-			row[i] = _decode(parts[i])
-		_slots[action] = row
-	_apply_all()
+	if cf.load(SAVE_PATH) == OK:
+		var changed := false
+		if cf.has_section("controls"):
+			cf.erase_section("controls")
+			changed = true
+		if cf.has_section("control_defaults"):
+			cf.erase_section("control_defaults")
+			changed = true
+		if changed:
+			cf.save(SAVE_PATH)
 	GuideControls.install()
 
 
-static func _read_map_into(dest: Dictionary) -> void:
-	for action in ACTIONS:
-		var row: Array = [null, null, null, null]
-		var kbm := 0
-		var pad := 0
-		for ev in InputMap.action_get_events(action):
-			if ev is InputEventKey or ev is InputEventMouseButton:
-				if kbm < 2:
-					row[kbm] = ev
-					kbm += 1
-			elif ev is InputEventJoypadButton or ev is InputEventJoypadMotion:
-				if pad < 2:
-					row[2 + pad] = ev
-					pad += 1
-		dest[action] = row
+static func action_events(action: String) -> Array:
+	var row: Array = [null, null, null, null]
+	if not InputMap.has_action(action):
+		return row
+	var kbm := 0
+	var pad := 0
+	for ev in InputMap.action_get_events(action):
+		if ev is InputEventKey or ev is InputEventMouseButton:
+			if kbm < 2:
+				row[kbm] = ev
+				kbm += 1
+		elif ev is InputEventJoypadButton or ev is InputEventJoypadMotion:
+			if pad < 2:
+				row[2 + pad] = ev
+				pad += 1
+	return row
 
 
-static func _apply_all() -> void:
-	for action in ACTIONS:
-		if not InputMap.has_action(action):
-			continue
-		InputMap.action_erase_events(action)
-		var row: Array = _slots.get(action, [null, null, null, null])
-		for ev in row:
-			if ev != null:
-				InputMap.action_add_event(action, ev)
-
-
-static func _save() -> void:
-	var cf := ConfigFile.new()
-	cf.load(SAVE_PATH)
-	for action in ACTIONS:
-		var parts: PackedStringArray = []
-		for ev in _slots[action]:
-			parts.append(_encode(ev))
-		cf.set_value("controls", action, "|".join(parts))
-	cf.save(SAVE_PATH)
+static func _write_action(action: String, row: Array) -> void:
+	if not InputMap.has_action(action):
+		return
+	InputMap.action_erase_events(action)
+	for ev in row:
+		if ev != null:
+			InputMap.action_add_event(action, ev)
 
 
 static func _encode(ev: InputEvent) -> String:
@@ -111,30 +86,6 @@ static func _encode(ev: InputEvent) -> String:
 		var motion := ev as InputEventJoypadMotion
 		return "axis:%d:%d" % [motion.axis, 1 if motion.axis_value >= 0.0 else -1]
 	return "-"
-
-
-static func _decode(text: String) -> InputEvent:
-	if text == "-" or text == "":
-		return null
-	var bits := text.split(":")
-	if bits[0] == "key" and bits.size() > 1:
-		var key := InputEventKey.new()
-		key.physical_keycode = int(bits[1]) as Key
-		return key
-	if bits[0] == "mouse" and bits.size() > 1:
-		var mouse := InputEventMouseButton.new()
-		mouse.button_index = int(bits[1]) as MouseButton
-		return mouse
-	if bits[0] == "joy" and bits.size() > 1:
-		var joy := InputEventJoypadButton.new()
-		joy.button_index = int(bits[1]) as JoyButton
-		return joy
-	if bits[0] == "axis" and bits.size() > 2:
-		var axis := InputEventJoypadMotion.new()
-		axis.axis = int(bits[1]) as JoyAxis
-		axis.axis_value = float(bits[2])
-		return axis
-	return null
 
 
 func _ready() -> void:
@@ -245,8 +196,6 @@ func _input(event: InputEvent) -> void:
 		return
 	_set_slot(_listen_action, _listen_index, bound)
 	_stop_listen()
-	_save()
-	_apply_all()
 	get_viewport().set_input_as_handled()
 
 
@@ -398,7 +347,6 @@ func _add_pair(parent: VBoxContainer, action: String, title: String, first: int,
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 4)
 	var label_box := MarginContainer.new()
-	label_box.custom_minimum_size = Vector2(110, 28)
 	label_box.add_theme_constant_override("margin_left", 8)
 	var label := Label.new()
 	label.text = title
@@ -406,10 +354,15 @@ func _add_pair(parent: VBoxContainer, action: String, title: String, first: int,
 	label.add_theme_font_size_override("font_size", 20)
 	label_box.add_child(label)
 	row.add_child(label_box)
+	var button_size := Vector2.ZERO
 	for i in 2:
 		var button := _ui_button.instantiate() as Button
-		button.custom_minimum_size = Vector2(110, 28)
-		button.size = Vector2(110, 28)
+		if button_size == Vector2.ZERO:
+			button_size = Vector2(button.offset_right - button.offset_left, button.offset_bottom - button.offset_top)
+			if button_size.x > 0.0 and button_size.y > 0.0:
+				label_box.custom_minimum_size = button_size
+		if button_size.x > 0.0 and button_size.y > 0.0:
+			button.custom_minimum_size = button_size
 		button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		button.clip_text = true
@@ -478,8 +431,6 @@ func _poll_stick_bind() -> void:
 		return
 	GuideControls.cancel()
 	_stop_listen()
-	_save()
-	_apply_all()
 
 
 func _refresh() -> void:
@@ -489,7 +440,7 @@ func _refresh() -> void:
 
 func _refresh_row(action: String) -> void:
 	var buttons: Array = _buttons[action]
-	var row: Array = _slots[action]
+	var row: Array = action_events(action)
 	for i in 4:
 		var button: Button = buttons[i]
 		var icon_rect := button.get_node("BindIcon") as TextureRect
@@ -507,14 +458,17 @@ func _refresh_row(action: String) -> void:
 
 func _set_slot(action: String, index: int, event: InputEvent) -> void:
 	for other in ACTIONS:
-		var row: Array = _slots[other]
+		var row := action_events(other)
+		var changed := false
 		for i in 4:
 			if row[i] != null and _events_match(row[i], event):
 				row[i] = null
-		_slots[other] = row
-	var mine: Array = _slots[action]
-	mine[index] = event
-	_slots[action] = mine
+				changed = true
+		if other == action:
+			row[index] = event
+			changed = true
+		if changed:
+			_write_action(other, row)
 
 
 func _event_for_slot(event: InputEvent, index: int) -> InputEvent:
@@ -675,19 +629,13 @@ func _on_guide_input(action: String, index: int, event: InputEvent) -> void:
 		return
 	_set_slot(action, index, event)
 	_stop_listen()
-	_save()
-	_apply_all()
 
 
 func resetBindings() -> void:
 	_stop_listen()
+	InputMap.load_from_project_settings()
+	if Main.current != null:
+		Main.current._bind_ui_joypad("ui_accept", JOY_BUTTON_A)
+		Main.current._bind_ui_joypad("ui_cancel", JOY_BUTTON_B)
 	GuideControls.restore_defaults()
-	for action in ACTIONS:
-		var copy: Array = [null, null, null, null]
-		var src: Array = _defaults.get(action, copy)
-		for i in 4:
-			copy[i] = src[i]
-		_slots[action] = copy
-	_apply_all()
-	_save()
 	_refresh()

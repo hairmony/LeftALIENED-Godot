@@ -42,7 +42,7 @@ func onOptions() -> void:
 	if is_instance_valid(_options):
 		return
 	_show_pause(false)
-	var packed := load("res://scenes/options.tscn") as PackedScene
+	var packed := Main.scene("res://scenes/options.tscn")
 	var options := packed.instantiate() as OptionsState
 	if options == null:
 		_show_pause(true)
@@ -66,7 +66,7 @@ func onControls() -> void:
 	if is_instance_valid(_controls):
 		return
 	_show_pause(false)
-	var packed := load("res://scenes/controls.tscn") as PackedScene
+	var packed := Main.scene("res://scenes/controls.tscn")
 	var controls := packed.instantiate() as ControlsState
 	if controls == null:
 		_show_pause(true)

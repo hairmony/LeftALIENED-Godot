@@ -19,6 +19,8 @@ var _pad: int = -1
 var music_volume: float = 1.0
 var sfx_volume: float = 1.0
 var state: Node
+var _pending_state: String = ""
+var _swap_queued: bool = false
 
 var music: AudioStreamPlayer
 var music_base: float = 1.0
@@ -239,13 +241,27 @@ static func scene(path: String) -> PackedScene:
 
 
 func change_state(which: String) -> void:
+	_pending_state = which
+	if _swap_queued:
+		return
+	_swap_queued = true
+	call_deferred("_swap_state")
+
+
+func _swap_state() -> void:
+	_swap_queued = false
+	var which := _pending_state
 	if state:
-		state.queue_free()
+		var old := state
 		state = null
+		old.free()
 	var path := "res://scenes/menu.tscn"
 	if which == "play":
 		path = "res://scenes/endless.tscn" if endless else "res://scenes/classic.tscn"
-	state = (ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE_DEEP) as PackedScene).instantiate()
+	scene("res://scenes/ui_button.tscn")
+	if which == "play":
+		scene("res://scenes/play.tscn")
+	state = scene(path).instantiate()
 	add_child(state)
 
 

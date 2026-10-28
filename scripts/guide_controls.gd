@@ -32,27 +32,16 @@ static func install() -> void:
 		guide_action.action_value_type = GUIDEAction.GUIDEActionValueType.BOOL
 		var mapping := GUIDEActionMapping.new()
 		mapping.action = guide_action
-		var defaults: Array = ControlsState._defaults.get(action_name, [null, null, null, null])
-		var saved: Array = ControlsState._slots.get(action_name, defaults)
+		var events := ControlsState.action_events(action_name)
 		for slot in 4:
 			var input_mapping := GUIDEInputMapping.new()
 			input_mapping.is_remappable = true
-			input_mapping.input = from_event(defaults[slot] if slot < defaults.size() else null)
+			input_mapping.input = from_event(events[slot])
 			mapping.input_mappings.append(input_mapping)
 		context.mappings.append(mapping)
 		_items[action_name] = guide_action
 	remapper = GUIDERemapper.new()
 	remapper.initialize([context], GUIDERemappingConfig.new())
-	for action_name in ControlsState.ACTIONS:
-		var guide_action: GUIDEAction = _items[action_name]
-		var defaults: Array = ControlsState._defaults.get(action_name, [null, null, null, null])
-		var saved: Array = ControlsState._slots.get(action_name, defaults)
-		var items := remapper.get_remappable_items(context, "", guide_action)
-		for item in items:
-			var current: InputEvent = saved[item.index] if item.index < saved.size() else null
-			var original: InputEvent = defaults[item.index] if item.index < defaults.size() else null
-			if _encode(current) != _encode(original):
-				remapper.set_bound_input(item, from_event(current))
 	var guide := (Engine.get_main_loop() as SceneTree).root.get_node("GUIDE")
 	guide.enable_mapping_context(context)
 	guide.set_remapping_config(remapper.get_mapping_config())
@@ -185,7 +174,3 @@ static func to_event(input: GUIDEInput) -> InputEvent:
 		axis.axis_value = 1.0
 		return axis
 	return null
-
-
-static func _encode(event: InputEvent) -> String:
-	return ControlsState._encode(event)

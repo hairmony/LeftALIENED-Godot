@@ -223,6 +223,7 @@ func _process(elapsed: float) -> void:
 	# Reset button
 	if Input.is_action_just_pressed("restart"):
 		_restart()
+		return
 
 	# Only run gameplay updates if NOT paused
 	if ship.alive:
