@@ -31,9 +31,9 @@ var _audio_cache := {}
 
 func _ready() -> void:
 	var win := get_window()
-	win.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
-	win.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
-	win.content_scale_size = Vector2i(WIDTH, HEIGHT)
+	win.size_changed.connect(_fit_screen)
+	_fit_screen()
+	call_deferred("_fit_screen")
 	current = self
 	var saved_music = OptionsState.music_choice()
 	if saved_music != null:
@@ -58,6 +58,13 @@ func _ready() -> void:
 	Input.joy_connection_changed.connect(func(_device, _connected): _choose_pad())
 	ControlsState.load_bindings()
 	change_state("menu")
+
+
+func _fit_screen() -> void:
+	var win := get_window()
+	win.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
+	win.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
+	win.content_scale_size = Vector2i(WIDTH, HEIGHT)
 
 
 func _bind_ui_joypad(action: String, button: JoyButton) -> void:

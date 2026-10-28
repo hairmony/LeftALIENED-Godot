@@ -15,8 +15,8 @@ extends PlayState
 @export var ENDLESS_SUPER_PEN_RAMP: float = 1.0
 @export var ENDLESS_SUPER_PEN_CAP: float = 10.0
 @export var ENDLESS_SUPER_PEN_START: float = 3.0
-@export var ENDLESS_GUNS_RAMP: float = 1.0
-@export var ENDLESS_GUNS_CAP: float = 14.0
+@export var ENDLESS_GUNS_RATE_RAMP: float = 1.0
+@export var ENDLESS_GUNS_RATE_CAP: float = 14.0
 @export var ENDLESS_GUNS_SPEED_RAMP: float = 25.0
 @export var ENDLESS_GUNS_SPEED_CAP: float = 500.0
 @export var ENDLESS_ARMOR_START: int = 3
@@ -145,7 +145,7 @@ func _pick_super() -> void:
 func _pick_guns() -> void:
 	if _pending < 1 or not _guns_open():
 		return
-	ship.PLAYER_SHOTS_PER_SEC = _limit_float(ship.PLAYER_SHOTS_PER_SEC + ENDLESS_GUNS_RAMP, ENDLESS_GUNS_CAP)
+	ship.PLAYER_SHOTS_PER_SEC = _limit_float(ship.PLAYER_SHOTS_PER_SEC + ENDLESS_GUNS_RATE_RAMP, ENDLESS_GUNS_RATE_CAP)
 	if ship.PLAYER_SHOTS_PER_SEC > 0.0:
 		ship.fireRate = 1.0 / ship.PLAYER_SHOTS_PER_SEC
 	ship.gunProjectileSpeed = _limit_float(ship.gunProjectileSpeed + ENDLESS_GUNS_SPEED_RAMP, ENDLESS_GUNS_SPEED_CAP)
@@ -230,7 +230,7 @@ func _super_open() -> bool:
 
 
 func _guns_open() -> bool:
-	return _can_raise(ship.PLAYER_SHOTS_PER_SEC, ENDLESS_GUNS_RAMP, ENDLESS_GUNS_CAP) \
+	return _can_raise(ship.PLAYER_SHOTS_PER_SEC, ENDLESS_GUNS_RATE_RAMP, ENDLESS_GUNS_RATE_CAP) \
 		or _can_raise(ship.gunProjectileSpeed, ENDLESS_GUNS_SPEED_RAMP, ENDLESS_GUNS_SPEED_CAP) \
 		or _can_raise(ship.superProjectileSpeed, ENDLESS_GUNS_SPEED_RAMP, ENDLESS_GUNS_SPEED_CAP)
 
@@ -277,7 +277,7 @@ func _apply_caps() -> void:
 		if ENDLESS_SUPER_CHARGE_MIN >= 0.0 and ship.MULTISHOT_CHARGE_MAX < ENDLESS_SUPER_CHARGE_MIN:
 			ship.MULTISHOT_CHARGE_MAX = ENDLESS_SUPER_CHARGE_MIN
 	if ship != null:
-		ship.PLAYER_SHOTS_PER_SEC = _limit_float(ship.PLAYER_SHOTS_PER_SEC, ENDLESS_GUNS_CAP)
+		ship.PLAYER_SHOTS_PER_SEC = _limit_float(ship.PLAYER_SHOTS_PER_SEC, ENDLESS_GUNS_RATE_CAP)
 		if ship.gunProjectileSpeed >= 0.0:
 			ship.gunProjectileSpeed = _limit_float(ship.gunProjectileSpeed, ENDLESS_GUNS_SPEED_CAP)
 		if ship.superProjectileSpeed >= 0.0:

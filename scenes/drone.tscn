@@ -6,8 +6,9 @@
 [node name="Drone" type="Node2D" unique_id=355869436]
 script = ExtResource("1_script")
 turnSpeed = 270.0
-fireRate = 6.0
+fireRate = 8.0
 shotDelay = 0.5
+targetRange = 250.0
 projectileSpeed = 375.0
 
 [node name="Sprite" type="Sprite2D" parent="." unique_id=1870962067]

@@ -199,13 +199,13 @@ func _process(elapsed: float) -> void:
 
 	if Input.is_action_just_pressed("debug_respawn"): # Press , respawn
 		_restart_shown = false
-		controlsText.text = _super_prompt()
 		ship.position = Vector2(Main.WIDTH / 2.0 - (ship.width() / 2.0), Main.HEIGHT - 50)
 		ship.alive = true
 		ship.exists = true
 		ship.visible = true
 		ship.health = ship.PLAYER_HEALTH_MAX
 		updateHealthText()
+		updateMultishotText()
 		gameOverText.visible = false
 
 	if Input.is_action_just_pressed("debug_god"): # Press / for God mode
@@ -529,9 +529,13 @@ func updateMultishotText() -> void:
 			controlsText.visible = false
 		return
 	multishotText.visible = true
-	if ship.multishotCharge >= ship.MULTISHOT_CHARGE_MAX and not _restart_shown:
+	if _restart_shown:
+		pass
+	elif ship.multishotCharge >= ship.MULTISHOT_CHARGE_MAX:
 		controlsText.text = _super_prompt()
 		controlsText.visible = true
+	else:
+		controlsText.visible = false
 	multishotText.text = "Super: " + str(int(ship.multishotCharge)) + "/" + str(int(ship.MULTISHOT_CHARGE_MAX))
 
 
