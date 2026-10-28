@@ -6,8 +6,9 @@
 [node name="Classic" unique_id=496385625 instance=ExtResource("1_play")]
 script = ExtResource("2_classic")
 FINAL_WAVE = 12
-SPAWN_RATE = 0.5
+SPAWN_RATE = 0.65
 SECTOR_FLASH_SPEED = 3.0
 SECTOR_CLEAR_TIME = 3.0
 SECTOR_FADE_TIME = 10.0
-MULTIPLIER_MAX = 20
+MULTIPLIER_MAX = 15
+MULTIPLIER_DECAY = 0.65

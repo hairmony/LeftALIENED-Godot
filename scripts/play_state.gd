@@ -43,7 +43,8 @@ var score: float = 0.0
 
 static var MULTIPLIER: int = 1 #Set the multiplier to 1; Set to static to be accessible from Enemy.hx
 static var multiplierTimer: float = 0.0
-@export var MULTIPLIER_MAX: int = 10
+@export_group("Multiplier")
+@export var MULTIPLIER_MAX: int = 20
 @export var MULTIPLIER_DECAY: float = 1.0 # seconds per decay
 
 # Variables for the multi-shot cooldown

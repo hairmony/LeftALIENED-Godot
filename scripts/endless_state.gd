@@ -4,6 +4,8 @@ extends PlayState
 @export_group("Endless")
 @export var ENDLESS_XP_START: float = 5000.0
 @export var ENDLESS_XP_RAMP_PERCENT: float = 1.15
+@export var ENDLESS_MULTIPLIER_ADD: int = 1
+@export var ENDLESS_MULTIPLIER_ADD_INTERVAL: int = 5
 @export var ENDLESS_SUPER_CHARGE_RAMP: float = 2.0
 @export var ENDLESS_SUPER_CHARGE_MIN: float = 4.0
 @export var ENDLESS_SUPER_CHARGE_START: float = 20.0
@@ -110,6 +112,8 @@ func on_score(points: int) -> void:
 		goal = _xp_goal()
 		_grant_armor()
 		_pending += 1
+		if ENDLESS_MULTIPLIER_ADD_INTERVAL > 0 and _level % ENDLESS_MULTIPLIER_ADD_INTERVAL == 0:
+			MULTIPLIER_MAX += ENDLESS_MULTIPLIER_ADD
 	_draw_xp()
 
 

@@ -6,7 +6,6 @@
 
 [node name="Play" type="Node2D" unique_id=1455872738]
 script = ExtResource("1_play")
-MULTIPLIER_MAX = 10
 
 [node name="Backdrop" type="Sprite2D" parent="." unique_id=413860673]
 texture_filter = 1
