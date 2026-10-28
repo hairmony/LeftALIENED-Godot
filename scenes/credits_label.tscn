@@ -17,7 +17,7 @@ text = "[center]
 
 
 [font_size=24]\"War does not determine who is right... 
-only who is [/font_size][font_size=36]LEFT[/font_size][font_size=24].\"[/font_size]
+only who is [/font_size][font_size=36][color=#CE1921]LEFT[/color][/font_size][font_size=24].\"[/font_size]
 
 [font_size=18]Betrand Russell[/font_size]
 
@@ -41,7 +41,7 @@ only who is [/font_size][font_size=36]LEFT[/font_size][font_size=24].\"[/font_si
 
 
 
-[font_size=24]PROGRAMMERS[/font_size]
+[font_size=24][color=#CE1921]PROGRAMMERS[/color][/font_size]
 
 
 [font_size=20]CORE PROGRAMMER[/font_size]
@@ -49,7 +49,7 @@ Hari Vallath
 
 
 
-[font_size=24]ART & SOUND DESIGN[/font_size]
+[font_size=24][color=#CE1921]ART & SOUND DESIGN[/color][/font_size]
 
 
 [font_size=20]ART & SOUND DESIGNER[/font_size]
@@ -61,7 +61,7 @@ LinkNinja via itch.io
 Hari Vallath
 
 
-[font_size=20]LEVEL BACKGROUND[/font_size]
+[font_size=20]BACKGROUND ART[/font_size]
 Screaming Brain Studios via OpenGameArt.org
 
 
@@ -71,7 +71,7 @@ Kego Wigwas
 
 
 
-[font_size=24]MUSIC[/font_size]
+[font_size=24][color=#CE1921]MUSIC[/color][/font_size]
 
 
 [font_size=20]Mysteries[/font_size]
@@ -99,12 +99,14 @@ Data_pion via Pixabay
 
 
 
-[font_size=18]Based on[/font_size]
+---
+
+[font_size=24]Based on[/font_size]
 [img=240]res://assets/logos/LogoOld.png[/img]
 
 
 
-[font_size=24]PROGRAMMERS[/font_size]
+[font_size=24][color=#CE1921]PROGRAMMERS[/color][/font_size]
 
 
 [font_size=20]CORE PROGRAMMERS[/font_size]
@@ -121,7 +123,7 @@ Nihar Poojari
 
 
 
-[font_size=24]ART & SOUND DESIGN[/font_size]
+[font_size=24][color=#CE1921]ART & SOUND DESIGN[/color][/font_size]
 
 
 [font_size=20]ART & SOUND DESIGNER[/font_size]
@@ -132,7 +134,7 @@ Niraaj Harshadan
 NASA/JPL Caltech
 
 
-[font_size=24]MUSIC[/font_size]
+[font_size=24][color=#CE1921]MUSIC[/color][/font_size]
 
 
 [font_size=20]MAZE[/font_size]
@@ -144,22 +146,8 @@ Kego Wigwas
 
 
 
-[font_size=24]PROJECT MANAGER[/font_size]
+[font_size=24][color=#CE1921]PROJECT MANAGER[/color][/font_size]
 Hari Vallath
-
-
-
-[font_size=24]DOCUMENTATION[/font_size]
-Hari Vallath
-Kego Wigwas
-
-
-
-[font_size=24]QUALITY ANALYSIS[/font_size]
-Kego Wigwas
-Hari Vallath
-
-
 
 
 
@@ -169,36 +157,74 @@ COMP-4478-FA Game Programming
 Dr. Sabah Mohammed
 2025
 
+---
 
 
 
 
-[font_size=24]TOOLS[/font_size]
+
+[font_size=24][color=#CE1921]DOCUMENTATION[/color][/font_size]
+Hari Vallath
+Kego Wigwas
+
+
+
+[font_size=24][color=#CE1921]QUALITY ANALYSIS[/color][/font_size]
+Kego Wigwas
+Hari Vallath
+
+
+[font_size=20][color=#CE1921]NO. 1 HATER[/color][/font_size]
+Talha Hasan
+
+
+
+
+
+[font_size=24][color=#CE1921]TOOLS[/color][/font_size]
 
 
 [font_size=20]GODOT[/font_size]
 [img=80]res://addons/maaacks_credits_scene/examples/assets/godot_engine_logo/logo_vertical_color_dark.png[/img]
+Juan Linietsky
+Ariel Manzur
+and contributors
 
-Author: [url=https://godotengine.org/contact]Juan Linietsky, Ariel Manzur, and contributors[/url]
 Source: [url=https://godotengine.org/]godotengine.org[/url]
 License: [url=https://github.com/godotengine/godot/blob/master/LICENSE.txt]MIT License[/url]
 
 
+[font_size=20]G.U.I.D.E[/font_size]
+Jan Thomä
+
+Source: [url=https://github.com/godotneers/G.U.I.D.E]github: G.U.I.D.E[/url]
+License: [url=https://github.com/godotneers/G.U.I.D.E/blob/main/LICENSE.md]MIT License[/url]
+
+
+[font_size=20]CONTROLLER ICONS[/font_size]
+[img=80]res://assets/logos/ControllerIcons.png[/img]
+Ricardo Subtil
+
+Source: [url=https://github.com/rsubtil/controller_icons]github: controller_icons[/url]
+License: [url=https://github.com/rsubtil/controller_icons/blob/master/LICENSE]MIT License[/url]
+[/center]
+
+
 [font_size=20]MAAACK'S CREDITS SCENE[/font_size]
 [img=80]res://addons/maaacks_credits_scene/examples/assets/plugin_logo/logo.png[/img]
+Marek Belski 
+and contributors
 
-Author: [url=https://github.com/Maaack/Godot-Credits-Scene/graphs/contributors]Marek Belski and contributors[/url]
 Source: [url=https://github.com/Maaack/Godot-Credits-Scene]github: Godot-Credits-Scene[/url]
 License: [url=https://github.com/Maaack/Godot-Credits-Scene/blob/main/LICENSE.txt]MIT License[/url]
 
 
 [font_size=20]GIT[/font_size]
 [img=80]res://addons/maaacks_credits_scene/examples/assets/git_logo/Git-Logo-2Color.png[/img]
+Linus Torvalds
 
-Author: [url=https://github.com/torvalds]Linus Torvalds[/url]
 Source: [url=https://git-scm.com/downloads]git-scm.com[/url]
-License: [url=https://opensource.org/licenses/GPL-2.0]GNU General Public License version 2[/url]
-[/center]"
+License: [url=https://opensource.org/licenses/GPL-2.0]GNU General Public License version 2[/url]"
 fit_content = true
 scroll_active = false
 horizontal_alignment = 1

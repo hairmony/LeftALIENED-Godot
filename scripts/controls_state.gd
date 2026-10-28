@@ -1,0 +1,693 @@
+class_name ControlsState
+extends Node2D
+
+const SAVE_PATH: String = "user://LeftAliened.cfg"
+const ACTIONS: Array[String] = [
+	"move_left", "move_right", "move_up", "move_down",
+	"aim_left", "aim_right", "aim_up", "aim_down",
+	"shoot", "dodge", "super", "restart"
+]
+const NAMES: Array[String] = [
+	"Move Left", "Move Right", "Move Up", "Move Down",
+	"Aim Left", "Aim Right", "Aim Up", "Aim Down",
+	"Shoot", "Dodge", "Super", "Restart"
+]
+
+static var listening: bool = false
+static var _listener: ControlsState
+static var _slots: Dictionary = {}
+static var _defaults: Dictionary = {}
+
+var on_closed := Callable()
+var _listen_action: String = ""
+var _listen_index: int = -1
+var _buttons: Dictionary = {}
+var _right_drag: bool = false
+var _right_drag_y: float = 0.0
+var _scroll_carry: float = 0.0
+var _focus_lock_until: int = 0
+var _stick_armed: bool = false
+var _ui_button: PackedScene
+
+@onready var keyboard_rows: VBoxContainer = $UI/Tabs/Keyboard/Rows
+@onready var gamepad_rows: VBoxContainer = $UI/Tabs/Gamepad/Rows
+
+
+static func capture_defaults() -> void:
+	if not _defaults.is_empty():
+		return
+	_read_map_into(_defaults)
+
+
+static func load_bindings() -> void:
+	capture_defaults()
+	_read_map_into(_slots)
+	var cf := ConfigFile.new()
+	if cf.load(SAVE_PATH) != OK or not cf.has_section("controls"):
+		_apply_all()
+		GuideControls.install()
+		return
+	for action in ACTIONS:
+		if not cf.has_section_key("controls", action):
+			continue
+		var parts: PackedStringArray = str(cf.get_value("controls", action)).split("|")
+		var row: Array = [null, null, null, null]
+		for i in mini(4, parts.size()):
+			row[i] = _decode(parts[i])
+		_slots[action] = row
+	_apply_all()
+	GuideControls.install()
+
+
+static func _read_map_into(dest: Dictionary) -> void:
+	for action in ACTIONS:
+		var row: Array = [null, null, null, null]
+		var kbm := 0
+		var pad := 0
+		for ev in InputMap.action_get_events(action):
+			if ev is InputEventKey or ev is InputEventMouseButton:
+				if kbm < 2:
+					row[kbm] = ev
+					kbm += 1
+			elif ev is InputEventJoypadButton or ev is InputEventJoypadMotion:
+				if pad < 2:
+					row[2 + pad] = ev
+					pad += 1
+		dest[action] = row
+
+
+static func _apply_all() -> void:
+	for action in ACTIONS:
+		if not InputMap.has_action(action):
+			continue
+		InputMap.action_erase_events(action)
+		var row: Array = _slots.get(action, [null, null, null, null])
+		for ev in row:
+			if ev != null:
+				InputMap.action_add_event(action, ev)
+
+
+static func _save() -> void:
+	var cf := ConfigFile.new()
+	cf.load(SAVE_PATH)
+	for action in ACTIONS:
+		var parts: PackedStringArray = []
+		for ev in _slots[action]:
+			parts.append(_encode(ev))
+		cf.set_value("controls", action, "|".join(parts))
+	cf.save(SAVE_PATH)
+
+
+static func _encode(ev: InputEvent) -> String:
+	if ev == null:
+		return "-"
+	if ev is InputEventKey:
+		return "key:%d" % (ev as InputEventKey).physical_keycode
+	if ev is InputEventMouseButton:
+		return "mouse:%d" % (ev as InputEventMouseButton).button_index
+	if ev is InputEventJoypadButton:
+		return "joy:%d" % (ev as InputEventJoypadButton).button_index
+	if ev is InputEventJoypadMotion:
+		var motion := ev as InputEventJoypadMotion
+		return "axis:%d:%d" % [motion.axis, 1 if motion.axis_value >= 0.0 else -1]
+	return "-"
+
+
+static func _decode(text: String) -> InputEvent:
+	if text == "-" or text == "":
+		return null
+	var bits := text.split(":")
+	if bits[0] == "key" and bits.size() > 1:
+		var key := InputEventKey.new()
+		key.physical_keycode = int(bits[1]) as Key
+		return key
+	if bits[0] == "mouse" and bits.size() > 1:
+		var mouse := InputEventMouseButton.new()
+		mouse.button_index = int(bits[1]) as MouseButton
+		return mouse
+	if bits[0] == "joy" and bits.size() > 1:
+		var joy := InputEventJoypadButton.new()
+		joy.button_index = int(bits[1]) as JoyButton
+		return joy
+	if bits[0] == "axis" and bits.size() > 2:
+		var axis := InputEventJoypadMotion.new()
+		axis.axis = int(bits[1]) as JoyAxis
+		axis.axis_value = float(bits[2])
+		return axis
+	return null
+
+
+func _ready() -> void:
+	_listener = self
+	_ui_button = Main.scene("res://scenes/ui_button.tscn")
+	load_bindings()
+	for i in ACTIONS.size():
+		_add_row(ACTIONS[i], NAMES[i])
+	if Main.using_controller:
+		($UI/BackButton as Button).grab_focus()
+	keyboard_rows.get_parent().follow_focus = false
+	gamepad_rows.get_parent().follow_focus = false
+	var keyboard_scroll := keyboard_rows.get_parent() as ScrollContainer
+	var gamepad_scroll := gamepad_rows.get_parent() as ScrollContainer
+	keyboard_scroll.get_v_scroll_bar().value_changed.connect(_sync_scroll.bind(keyboard_scroll, gamepad_scroll))
+	gamepad_scroll.get_v_scroll_bar().value_changed.connect(_sync_scroll.bind(gamepad_scroll, keyboard_scroll))
+	ControllerIcons.input_type_changed.connect(func(_type, _controller): _refresh())
+
+
+var _syncing_scroll: bool = false
+
+
+func _sync_scroll(value: float, from: ScrollContainer, to: ScrollContainer) -> void:
+	if _syncing_scroll or from == to:
+		return
+	var next := int(value)
+	if to.scroll_vertical == next:
+		return
+	_syncing_scroll = true
+	to.scroll_vertical = next
+	_syncing_scroll = false
+
+
+func _exit_tree() -> void:
+	if _listener == self:
+		_listener = null
+	listening = false
+	GuideControls.cancel()
+
+
+func _process(delta: float) -> void:
+	if listening:
+		_scroll_carry = 0.0
+		_poll_stick_bind()
+		return
+	var axis := _scroll_axis()
+	var scroll := _current_scroll()
+	if scroll == null or absf(axis) < 0.01:
+		_scroll_carry = 0.0
+		return
+	_scroll_carry += axis * 200.0 * delta
+	var step := int(_scroll_carry)
+	if step == 0:
+		return
+	_scroll_carry -= float(step)
+	scroll.scroll_vertical += step
+
+
+func _current_scroll() -> ScrollContainer:
+	var tabs := $UI/Tabs as TabContainer
+	return tabs.get_tab_control(tabs.current_tab) as ScrollContainer
+
+
+func _scroll_axis() -> float:
+	var joy := _joy_scroll_axis()
+	if absf(joy) >= 0.15:
+		return clampf(joy, -1.0, 1.0)
+	return Input.get_axis("ui_text_scroll_up", "ui_text_scroll_down")
+
+
+func _joy_scroll_axis() -> float:
+	var value := 0.0
+	for device in Input.get_connected_joypads():
+		value += _joy_action_axis("ui_text_scroll_down", device)
+		value -= _joy_action_axis("ui_text_scroll_up", device)
+	return value
+
+
+func _joy_action_axis(action: String, device: int) -> float:
+	var best := 0.0
+	for ev in InputMap.action_get_events(action):
+		if ev is not InputEventJoypadMotion:
+			continue
+		var motion := ev as InputEventJoypadMotion
+		if motion.device >= 0 and motion.device != device:
+			continue
+		var raw := Input.get_joy_axis(device, motion.axis)
+		if motion.axis_value < 0.0:
+			raw = -raw
+		if raw > best:
+			best = raw
+	return best
+
+
+func _input(event: InputEvent) -> void:
+	if not listening and _tab_switch(event):
+		return
+	if not listening and _right_scroll(event):
+		return
+	if not listening and _move_focus(event):
+		return
+	if not listening or GuideControls.detecting():
+		return
+	var bound := _event_for_slot(event, _listen_index)
+	if bound == null:
+		if _blocks_while_listening(event):
+			get_viewport().set_input_as_handled()
+		return
+	_set_slot(_listen_action, _listen_index, bound)
+	_stop_listen()
+	_save()
+	_apply_all()
+	get_viewport().set_input_as_handled()
+
+
+func _tab_switch(event: InputEvent) -> bool:
+	if not event.is_pressed() or event.is_echo():
+		return false
+	var direction := 0
+	if InputMap.has_action("ui_tab_prev") and event.is_action("ui_tab_prev"):
+		direction = -1
+	elif InputMap.has_action("ui_tab_next") and event.is_action("ui_tab_next"):
+		direction = 1
+	if direction == 0:
+		return false
+	var slot := _find_slot(get_viewport().gui_get_focus_owner())
+	var tabs := $UI/Tabs as TabContainer
+	tabs.current_tab = wrapi(tabs.current_tab + direction, 0, tabs.get_tab_count())
+	if slot.x >= 0:
+		_focus_slot(int(slot.x), int(slot.y))
+	get_viewport().set_input_as_handled()
+	return true
+
+
+func _move_focus(event: InputEvent) -> bool:
+	if not event.is_pressed() or event.is_echo():
+		return false
+	var step := Vector2i.ZERO
+	if event.is_action("ui_up"):
+		step = Vector2i.UP
+	elif event.is_action("ui_down"):
+		step = Vector2i.DOWN
+	elif event.is_action("ui_left"):
+		step = Vector2i.LEFT
+	elif event.is_action("ui_right"):
+		step = Vector2i.RIGHT
+	else:
+		return false
+	var now := Time.get_ticks_msec()
+	if now < _focus_lock_until:
+		get_viewport().set_input_as_handled()
+		return true
+	_focus_lock_until = now + 50
+	var owner := get_viewport().gui_get_focus_owner()
+	var slot := _find_slot(owner)
+	if slot.x < 0:
+		if owner == $UI/BackButton and step == Vector2i.RIGHT:
+			($UI/ResetButton as Button).grab_focus()
+		elif owner == $UI/ResetButton and step == Vector2i.LEFT:
+			($UI/BackButton as Button).grab_focus()
+		elif owner == $UI/BackButton and step == Vector2i.UP:
+			_focus_slot(ACTIONS.size() - 1, 0)
+		elif owner == $UI/ResetButton and step == Vector2i.UP:
+			_focus_slot(ACTIONS.size() - 1, 0)
+		elif owner == null:
+			_focus_slot(0, 0)
+	else:
+		var row := int(slot.x) + step.y
+		var col := int(slot.y) + step.x
+		if row < 0:
+			pass
+		elif row >= ACTIONS.size():
+			($UI/ResetButton as Button).grab_focus()
+		else:
+			_focus_slot(row, clampi(col, 0, 1))
+	get_viewport().set_input_as_handled()
+	return true
+
+
+func _find_slot(owner: Control) -> Vector2i:
+	if owner == null:
+		return Vector2i(-1, -1)
+	for row in ACTIONS.size():
+		var buttons: Array = _buttons[ACTIONS[row]]
+		for i in buttons.size():
+			if buttons[i] == owner:
+				return Vector2i(row, i % 2)
+	return Vector2i(-1, -1)
+
+
+func _focus_slot(row: int, column: int) -> void:
+	var tabs := $UI/Tabs as TabContainer
+	var buttons: Array = _buttons[ACTIONS[row]]
+	var index := tabs.current_tab * 2 + column
+	var button := buttons[index] as Button
+	button.grab_focus()
+	var scroll := tabs.get_tab_control(tabs.current_tab) as ScrollContainer
+	if scroll != null:
+		scroll.ensure_control_visible(button)
+
+
+func _blocks_while_listening(event: InputEvent) -> bool:
+	if event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
+		return true
+	if event is InputEventKey and (event as InputEventKey).pressed and not (event as InputEventKey).echo:
+		return true
+	if event is InputEventJoypadButton and (event as InputEventJoypadButton).pressed:
+		return true
+	if event is InputEventJoypadMotion and absf((event as InputEventJoypadMotion).axis_value) >= 0.5:
+		return true
+	return false
+
+
+func _stop_listen() -> void:
+	listening = false
+	_listen_index = -1
+	_stick_armed = false
+	_set_menu_locked(false)
+	_refresh()
+
+
+func _set_menu_locked(locked: bool) -> void:
+	($UI/BackButton as Button).disabled = locked
+	($UI/ResetButton as Button).disabled = locked
+	($UI/Tabs as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE if locked else Control.MOUSE_FILTER_STOP
+	for action in _buttons:
+		var buttons: Array = _buttons[action]
+		for i in buttons.size():
+			var button := buttons[i] as Button
+			var current: bool = locked and str(action) == _listen_action and i == _listen_index
+			button.disabled = locked and not current
+
+
+func _right_scroll(event: InputEvent) -> bool:
+	var tabs := $UI/Tabs as TabContainer
+	var scroll := tabs.get_child(tabs.current_tab) as ScrollContainer
+	if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_RIGHT:
+		if event.pressed and tabs.get_global_rect().has_point(event.global_position):
+			_right_drag = true
+			_right_drag_y = event.global_position.y
+			get_viewport().set_input_as_handled()
+			return true
+		_right_drag = false
+	elif event is InputEventMouseMotion and _right_drag:
+		scroll.scroll_vertical += int(_right_drag_y - event.global_position.y)
+		_right_drag_y = event.global_position.y
+		get_viewport().set_input_as_handled()
+		return true
+	return false
+
+
+func _add_row(action: String, title: String) -> void:
+	var buttons: Array[Button] = []
+	_add_pair(keyboard_rows, action, title, 0, buttons)
+	_add_pair(gamepad_rows, action, title, 2, buttons)
+	_buttons[action] = buttons
+	_refresh_row(action)
+
+
+func _add_pair(parent: VBoxContainer, action: String, title: String, first: int, buttons: Array[Button]) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 4)
+	var label_box := MarginContainer.new()
+	label_box.custom_minimum_size = Vector2(110, 28)
+	label_box.add_theme_constant_override("margin_left", 8)
+	var label := Label.new()
+	label.text = title
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 20)
+	label_box.add_child(label)
+	row.add_child(label_box)
+	for i in 2:
+		var button := _ui_button.instantiate() as Button
+		button.custom_minimum_size = Vector2(110, 28)
+		button.size = Vector2(110, 28)
+		button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		button.clip_text = true
+		button.alignment = HORIZONTAL_ALIGNMENT_CENTER
+		button.toggle_mode = true
+		var icon_rect := TextureRect.new()
+		icon_rect.name = "BindIcon"
+		icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon_rect.set_anchors_preset(Control.PRESET_CENTER)
+		icon_rect.offset_left = -10.0
+		icon_rect.offset_top = -10.0
+		icon_rect.offset_right = 10.0
+		icon_rect.offset_bottom = 10.0
+		icon_rect.visible = false
+		button.add_child(icon_rect)
+		button.pressed.connect(_begin_listen.bind(action, first + i))
+		row.add_child(button)
+		buttons.append(button)
+	parent.add_child(row)
+
+
+func _begin_listen(action: String, index: int) -> void:
+	listening = true
+	_listen_action = action
+	_listen_index = index
+	_set_menu_locked(true)
+	_stick_armed = false
+	_refresh()
+	if GuideControls.ready() and index < 2:
+		GuideControls.begin(action, index)
+
+
+func _poll_stick_bind() -> void:
+	if _listen_index < 2:
+		return
+	var held := -1
+	var axis := -1
+	var value := 0.0
+	for device in Input.get_connected_joypads():
+		for button in JOY_BUTTON_MAX:
+			if Input.is_joy_button_pressed(device, button):
+				held = button
+		for i in JOY_AXIS_MAX:
+			var raw := Input.get_joy_axis(device, i)
+			if absf(raw) > absf(value):
+				value = raw
+				axis = i
+	if not _stick_armed:
+		if held < 0 and absf(value) < 0.35:
+			_stick_armed = true
+		return
+	var action := _listen_action
+	var index := _listen_index
+	if held >= 0:
+		var joy := InputEventJoypadButton.new()
+		joy.button_index = held as JoyButton
+		_set_slot(action, index, joy)
+	elif axis >= 0 and absf(value) >= 0.65:
+		var motion := InputEventJoypadMotion.new()
+		motion.axis = axis as JoyAxis
+		motion.axis_value = -1.0 if value < 0.0 else 1.0
+		_set_slot(action, index, motion)
+	else:
+		return
+	GuideControls.cancel()
+	_stop_listen()
+	_save()
+	_apply_all()
+
+
+func _refresh() -> void:
+	for action in ACTIONS:
+		_refresh_row(action)
+
+
+func _refresh_row(action: String) -> void:
+	var buttons: Array = _buttons[action]
+	var row: Array = _slots[action]
+	for i in 4:
+		var button: Button = buttons[i]
+		var icon_rect := button.get_node("BindIcon") as TextureRect
+		button.icon = null
+		button.set_pressed_no_signal(listening and action == _listen_action and i == _listen_index)
+		if listening and action == _listen_action and i == _listen_index:
+			button.text = "..."
+			icon_rect.visible = false
+		else:
+			var icon := icon_for(row[i])
+			icon_rect.texture = icon
+			icon_rect.visible = icon != null
+			button.text = "" if icon != null else _event_text(row[i])
+
+
+func _set_slot(action: String, index: int, event: InputEvent) -> void:
+	for other in ACTIONS:
+		var row: Array = _slots[other]
+		for i in 4:
+			if row[i] != null and _events_match(row[i], event):
+				row[i] = null
+		_slots[other] = row
+	var mine: Array = _slots[action]
+	mine[index] = event
+	_slots[action] = mine
+
+
+func _event_for_slot(event: InputEvent, index: int) -> InputEvent:
+	var kbm: bool = index < 2
+	if kbm and event is InputEventKey and event.pressed and not event.echo:
+		if (event as InputEventKey).physical_keycode == KEY_ESCAPE:
+			_stop_listen()
+			get_viewport().set_input_as_handled()
+			return null
+		var key := InputEventKey.new()
+		key.physical_keycode = (event as InputEventKey).physical_keycode
+		return key
+	if kbm and event is InputEventMouseButton and event.pressed:
+		var mouse := InputEventMouseButton.new()
+		mouse.button_index = (event as InputEventMouseButton).button_index
+		return mouse
+	if not kbm and event is InputEventJoypadButton and event.pressed:
+		var joy := InputEventJoypadButton.new()
+		joy.button_index = (event as InputEventJoypadButton).button_index
+		return joy
+	if not kbm and event is InputEventJoypadMotion and absf((event as InputEventJoypadMotion).axis_value) >= 0.5:
+		var axis := InputEventJoypadMotion.new()
+		axis.axis = (event as InputEventJoypadMotion).axis
+		axis.axis_value = 1.0 if (event as InputEventJoypadMotion).axis_value > 0.0 else -1.0
+		return axis
+	return null
+
+
+func _events_match(a: InputEvent, b: InputEvent) -> bool:
+	return _encode(a) == _encode(b)
+
+
+static func icon_for(ev: InputEvent) -> Texture2D:
+	if ev == null:
+		return null
+	return ControllerIcons.parse_event(ev) as Texture2D
+
+
+static func prompt_text(action: String, suffix: String) -> String:
+	var want_pad := ControllerIcons.get_last_input_type() == ControllerIcons.InputType.CONTROLLER
+	var ev := _first_event(action, want_pad)
+	if ev == null:
+		ev = _first_event(action, not want_pad)
+	var icon := icon_for(ev)
+	if icon != null and icon.resource_path != "":
+		return "[img=32]%s[/img] %s" % [icon.resource_path, suffix]
+	var word := _event_text(ev) if ev != null else ""
+	if word == "" or word == "-":
+		return suffix
+	return word + " " + suffix
+
+
+static func _first_event(action: String, pad: bool) -> InputEvent:
+	if not InputMap.has_action(action):
+		return null
+	for ev in InputMap.action_get_events(action):
+		var is_pad := ev is InputEventJoypadButton or ev is InputEventJoypadMotion
+		if is_pad == pad:
+			return ev
+	return null
+
+
+static func primary_text(action: String) -> String:
+	if not InputMap.has_action(action):
+		return ""
+	for ev in InputMap.action_get_events(action):
+		if ev is InputEventKey or ev is InputEventMouseButton:
+			return _event_text(ev)
+	return ""
+
+
+static func _event_text(ev: InputEvent) -> String:
+	if ev == null:
+		return "-"
+	if ev is InputEventKey:
+		return OS.get_keycode_string((ev as InputEventKey).physical_keycode)
+	if ev is InputEventMouseButton:
+		match (ev as InputEventMouseButton).button_index:
+			MOUSE_BUTTON_LEFT:
+				return "Left Click"
+			MOUSE_BUTTON_RIGHT:
+				return "Right Click"
+			MOUSE_BUTTON_MIDDLE:
+				return "Middle Click"
+			_:
+				return "Mouse %d" % (ev as InputEventMouseButton).button_index
+	if ev is InputEventJoypadButton:
+		return _joy_button_text((ev as InputEventJoypadButton).button_index)
+	if ev is InputEventJoypadMotion:
+		return _joy_axis_text((ev as InputEventJoypadMotion).axis, (ev as InputEventJoypadMotion).axis_value >= 0.0)
+	return "-"
+
+
+static func _joy_button_text(index: int) -> String:
+	match index:
+		JOY_BUTTON_A:
+			return "Cross"
+		JOY_BUTTON_B:
+			return "Circle"
+		JOY_BUTTON_X:
+			return "Square"
+		JOY_BUTTON_Y:
+			return "Triangle"
+		JOY_BUTTON_LEFT_SHOULDER:
+			return "L1"
+		JOY_BUTTON_RIGHT_SHOULDER:
+			return "R1"
+		JOY_BUTTON_LEFT_STICK:
+			return "L3"
+		JOY_BUTTON_RIGHT_STICK:
+			return "R3"
+		JOY_BUTTON_BACK:
+			return "Back"
+		JOY_BUTTON_START:
+			return "Start"
+		JOY_BUTTON_DPAD_UP:
+			return "D-Pad Up"
+		JOY_BUTTON_DPAD_DOWN:
+			return "D-Pad Down"
+		JOY_BUTTON_DPAD_LEFT:
+			return "D-Pad Left"
+		JOY_BUTTON_DPAD_RIGHT:
+			return "D-Pad Right"
+		_:
+			return "Button %d" % index
+
+
+static func _joy_axis_text(axis: int, positive: bool) -> String:
+	match axis:
+		JOY_AXIS_LEFT_X:
+			return "L Stick Right" if positive else "L Stick Left"
+		JOY_AXIS_LEFT_Y:
+			return "L Stick Down" if positive else "L Stick Up"
+		JOY_AXIS_RIGHT_X:
+			return "R Stick Right" if positive else "R Stick Left"
+		JOY_AXIS_RIGHT_Y:
+			return "R Stick Down" if positive else "R Stick Up"
+		JOY_AXIS_TRIGGER_LEFT:
+			return "L2"
+		JOY_AXIS_TRIGGER_RIGHT:
+			return "R2"
+		_:
+			return "Axis %d" % axis
+
+
+func backToMenu() -> void:
+	_stop_listen()
+	var closed := on_closed
+	on_closed = Callable()
+	if closed.is_valid():
+		closed.call()
+	queue_free()
+
+
+func _on_guide_input(action: String, index: int, event: InputEvent) -> void:
+	if event == null:
+		_stop_listen()
+		return
+	_set_slot(action, index, event)
+	_stop_listen()
+	_save()
+	_apply_all()
+
+
+func resetBindings() -> void:
+	_stop_listen()
+	GuideControls.restore_defaults()
+	for action in ACTIONS:
+		var copy: Array = [null, null, null, null]
+		var src: Array = _defaults.get(action, copy)
+		for i in 4:
+			copy[i] = src[i]
+		_slots[action] = copy
+	_apply_all()
+	_save()
+	_refresh()

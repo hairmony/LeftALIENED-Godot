@@ -6,7 +6,7 @@ var index: int = -1
 var origin: Vector2 = Vector2.ZERO
 var knob: Vector2 = Vector2.ZERO
 var dragging: bool = false
-const RADIUS: float = 46.0
+@export var radius: float = 46.0
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -21,19 +21,18 @@ func _gui_input(event: InputEvent) -> void:
 			_end()
 	elif event is InputEventScreenDrag and event.index == index:
 		var delta: Vector2 = event.position - origin
-		delta = delta.limit_length(RADIUS)
+		delta = delta.limit_length(radius)
 		knob = origin + delta
 		_emit()
 	else:
 		return
 	accept_event()
-	queue_redraw()
 
 
 func _emit() -> void:
 	var vector := Vector2.ZERO
 	if dragging:
-		vector = (knob - origin) / RADIUS
+		vector = (knob - origin) / radius
 	changed.emit(vector)
 
 
@@ -41,15 +40,3 @@ func _end() -> void:
 	index = -1
 	dragging = false
 	changed.emit(Vector2.ZERO)
-	queue_redraw()
-
-
-func _draw() -> void:
-	var center := size * 0.5
-	if dragging:
-		center = origin
-	draw_arc(center, RADIUS, 0.0, TAU, 32, Color(1, 1, 1, 0.35), 2.0)
-	var knob_at := center
-	if dragging:
-		knob_at = knob
-	draw_circle(knob_at, 16.0, Color(0.807843, 0.098039, 0.129412, 0.8))

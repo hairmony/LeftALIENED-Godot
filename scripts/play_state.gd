@@ -1,56 +1,13 @@
 class_name PlayState
 extends Node2D
 
-@export_group("Endless")
-@export var ENDLESS_XP_KILLS: float = 50.0
-@export var ENDLESS_XP_RAMP_PERCENT: float = 1.15
-@export var ENDLESS_SUPER_CHARGE_RAMP: float = 2.0
-@export var ENDLESS_SUPER_CHARGE_MIN: float = 4.0
-@export var ENDLESS_SUPER_CHARGE_START: float = 20.0
-@export var ENDLESS_SUPER_SHOTS_RAMP: float = 2.0
-@export var ENDLESS_SUPER_SHOTS_CAP: float = 24.0
-@export var ENDLESS_SUPER_SHOTS_START: float = 8.0
-@export var ENDLESS_SUPER_PEN_RAMP: float = 1.0
-@export var ENDLESS_SUPER_PEN_CAP: float = 10.0
-@export var ENDLESS_SUPER_PEN_START: float = 3.0
-@export var ENDLESS_GUNS_RAMP: float = 1.0
-@export var ENDLESS_GUNS_CAP: float = 14.0
-@export var ENDLESS_GUNS_SPEED_RAMP: float = 25.0
-@export var ENDLESS_GUNS_SPEED_CAP: float = 500.0
-@export var ENDLESS_ARMOR_START: int = 3
-@export var ENDLESS_ARMOR_AMOUNT: int = 1
-@export var ENDLESS_ARMOR_CAP: int = 8
-@export var ENDLESS_DRONE_AMOUNT: int = 1
-@export var ENDLESS_DRONE_CAP: int = 3
-@export var ENDLESS_RAMP_TIME: float = 30.0
-@export var ENDLESS_ENEMY_INTERVAL: float = 1.5
-@export var ENDLESS_ENEMY_INTERVAL_RAMP: float = 0.1
-@export var ENDLESS_ENEMY_INTERVAL_MIN: float = 0.35
-@export var ENDLESS_ASTEROID_INTERVAL: float = 0.8
-@export var ENDLESS_ASTEROID_INTERVAL_RAMP: float = 0.05
-@export var ENDLESS_ASTEROID_INTERVAL_MIN: float = 0.2
-@export var ENDLESS_MAX_ENEMIES: int = 8
-@export var ENDLESS_MAX_ENEMIES_RAMP: int = 1
-@export var ENDLESS_MAX_ENEMIES_CAP: int = 24
-@export var ENDLESS_MAX_ASTEROIDS: int = 12
-@export var ENDLESS_MAX_ASTEROIDS_RAMP: int = 2
-@export var ENDLESS_MAX_ASTEROIDS_CAP: int = 40
-@export var ENDLESS_ENEMY_SPEED: int = 55
-@export var ENDLESS_ENEMY_SPEED_RAMP: int = 5
-@export var ENDLESS_ENEMY_SPEED_CAP: int = 140
-@export var ENDLESS_ASTEROID_SPEED: int = 100
-@export var ENDLESS_ASTEROID_SPEED_RAMP: int = 10
-@export var ENDLESS_ASTEROID_SPEED_CAP: int = 220
-@export var ENDLESS_ASTEROID_DRIFT: float = 50.0
-@export_group("")
-
-const PLAYER_SCENE := preload("res://scenes/player.tscn")
-const ASTEROID_SCENE := preload("res://scenes/asteroid.tscn")
-const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
-const ENEMY_PROJECTILE_SCENE := preload("res://scenes/enemy_projectile.tscn")
-const BOSS_SCENE := preload("res://scenes/boss.tscn")
-const PAUSE_SCENE := preload("res://scenes/pause.tscn")
-const FLASH_SCENE := preload("res://scenes/flash.tscn")
+var _player_scene: PackedScene
+var _asteroid_scene: PackedScene
+var _enemy_scene: PackedScene
+var _enemy_projectile_scene: PackedScene
+var _boss_scene: PackedScene
+var _pause_scene: PackedScene
+var _flash_scene: PackedScene
 
 static var current: PlayState
 
@@ -64,10 +21,11 @@ static var current: PlayState
 @onready var gameOverText: Label = $HUD/UI/GameOverText
 @onready var gameWonText: Label = $HUD/UI/GameWonText
 @onready var waveText: Label = $HUD/UI/WaveText
-@onready var controlsText: Label = $HUD/UI/ControlsText
+@onready var controlsText: RichTextLabel = $HUD/UI/ControlsText
 
 var ship: Player # So Boss.hx can use it
 var _restarting: bool = false
+var _restart_shown: bool = false
 var asteroid: Array = []
 var projectiles: Array = []
 var enemyProjectiles: Array = [] # Public so boss can fire projectiles in Boss.hx
@@ -85,7 +43,7 @@ var score: float = 0.0
 
 static var MULTIPLIER: int = 1 #Set the multiplier to 1; Set to static to be accessible from Enemy.hx
 static var multiplierTimer: float = 0.0
-@export var MULTIPLIER_MAX: int = 5
+@export var MULTIPLIER_MAX: int = 10
 @export var MULTIPLIER_DECAY: float = 1.0 # seconds per decay
 
 # Variables for the multi-shot cooldown
@@ -120,6 +78,13 @@ func _exit_tree() -> void:
 
 
 func create() -> void:
+	_player_scene = Main.scene("res://scenes/player.tscn")
+	_asteroid_scene = Main.scene("res://scenes/asteroid.tscn")
+	_enemy_scene = Main.scene("res://scenes/enemy.tscn")
+	_enemy_projectile_scene = Main.scene("res://scenes/enemy_projectile.tscn")
+	_boss_scene = Main.scene("res://scenes/boss.tscn")
+	_pause_scene = Main.scene("res://scenes/pause.tscn")
+	_flash_scene = Main.scene("res://scenes/flash.tscn")
 	MULTIPLIER = 1
 	multiplierTimer = 0.0
 
@@ -132,7 +97,7 @@ func create() -> void:
 		ship_asset = int(saved)
 
 	# Spawn in player
-	ship = PLAYER_SCENE.instantiate() as Player
+	ship = _player_scene.instantiate() as Player
 	ship.apply_asset(ship_asset)
 	actors.add_child(ship)
 	# Moved player spawn to bottom of the screen
@@ -146,6 +111,7 @@ func create() -> void:
 	_shotClock = _shotInterval
 
 	begin_mode()
+	ControllerIcons.input_type_changed.connect(func(_type, _controller): _refresh_prompt())
 	updateScoreText()
 	updateHealthText()
 	updateMultishotText()
@@ -205,7 +171,8 @@ func _process(elapsed: float) -> void:
 	var score_width := scoreText.get_theme_font("font").get_string_size(scoreText.text, HORIZONTAL_ALIGNMENT_LEFT, -1, scoreText.get_theme_font_size("font_size")).x
 	multiplierText.offset_left = scoreText.offset_left + score_width + 8.0
 	multiplierText.offset_right = multiplierText.offset_left + 80.0
-	var combo_color := Color.WHITE.lerp(Color(0.807843, 0.098039, 0.129412), clampf((float(MULTIPLIER) - 1.0) / 4.0, 0.0, 1.0))
+	var combo_span := float(maxi(MULTIPLIER_MAX - 1, 1))
+	var combo_color := Color.WHITE.lerp(Color(0.807843, 0.098039, 0.129412), clampf((float(MULTIPLIER) - 1.0) / combo_span, 0.0, 1.0))
 	scoreText.modulate = combo_color
 	multiplierText.modulate = combo_color
 
@@ -230,7 +197,8 @@ func _process(elapsed: float) -> void:
 		isWaveComplete()
 
 	if Input.is_action_just_pressed("debug_respawn"): # Press , respawn
-		controlsText.text = "SPACE to SUPER"
+		_restart_shown = false
+		controlsText.text = _super_prompt()
 		ship.position = Vector2(Main.WIDTH / 2.0 - (ship.width() / 2.0), Main.HEIGHT - 50)
 		ship.alive = true
 		ship.exists = true
@@ -287,7 +255,7 @@ func _process(elapsed: float) -> void:
 
 # Pause menu variables
 func pausemenu() -> void:
-	var pause := PAUSE_SCENE.instantiate()
+	var pause := _pause_scene.instantiate()
 	add_child(pause)
 
 
@@ -375,12 +343,29 @@ func _restart() -> void:
 	if _restarting:
 		return
 	_restarting = true
-	controlsText.text = "SPACE to SUPER"
+	_restart_shown = false
+	controlsText.text = _super_prompt()
 	Main.current.change_state("play") # Reset with R key
 
 
+func _refresh_prompt() -> void:
+	if _restart_shown:
+		controlsText.text = _restart_prompt()
+	elif controlsText.visible:
+		controlsText.text = _super_prompt()
+
+
+func _super_prompt() -> String:
+	return ControlsState.prompt_text("super", "to SUPER")
+
+
+func _restart_prompt() -> String:
+	return ControlsState.prompt_text("restart", "to Restart")
+
+
 func _show_restart() -> void:
-	controlsText.text = "R to Restart"
+	_restart_shown = true
+	controlsText.text = _restart_prompt()
 	controlsText.visible = true
 	controlsText.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if DisplayServer.is_touchscreen_available():
@@ -390,7 +375,7 @@ func _show_restart() -> void:
 
 
 func _on_restart_input(event: InputEvent) -> void:
-	if controlsText.text != "R to Restart":
+	if not _restart_shown:
 		return
 	var tapped: bool = (event is InputEventScreenTouch and event.pressed) or (event is InputEventMouseButton and event.pressed)
 	if tapped:
@@ -410,7 +395,6 @@ func collideProjectile(object1: Actor, object2: Actor) -> void:
 			env.hide_after(DEATH_ANIMATION_DURATION)
 			pointsAdd = 200
 			asteroidHits += 1
-			on_kill()
 		else:
 			return
 	elif object1 is Enemy:
@@ -424,7 +408,6 @@ func collideProjectile(object1: Actor, object2: Actor) -> void:
 			pointsAdd = 100
 			enemyHits += 1
 			updateMultiplier()
-			on_kill()
 		else:
 			return
 
@@ -450,7 +433,9 @@ func collideProjectile(object1: Actor, object2: Actor) -> void:
 		ship.multishotCharge += 1
 		updateMultishotText() # Update the display
 
-	score += pointsAdd * MULTIPLIER
+	var gained := pointsAdd * MULTIPLIER
+	score += gained
+	on_score(gained)
 	# Update score
 	updateScoreText()
 	isWaveComplete()
@@ -469,7 +454,9 @@ func collideBoss(object1: Actor, object2: Actor) -> void:
 		Main.current.play_sound("assets/sounds/DeathBoss.ogg", 0.4)
 		camera_flash(Color(1, 1, 1), 1.0)
 		the_boss.kill()
-		score += 5000 * MULTIPLIER # Boss worth 5000 (?)
+		var boss_points := 5000 * MULTIPLIER # Boss worth 5000 (?)
+		score += boss_points
+		on_score(boss_points)
 		if ship.superUnlocked:
 			ship.multishotCharge = ship.MULTISHOT_CHARGE_MAX # Boss fully recharges multishot charge
 		updateMultishotText()
@@ -479,7 +466,7 @@ func collideBoss(object1: Actor, object2: Actor) -> void:
 		on_boss_cleared()
 
 
-func on_kill() -> void:
+func on_score(_points: int) -> void:
 	pass
 
 
@@ -512,14 +499,14 @@ func _tick_spawns(elapsed: float) -> void:
 
 
 func _spawn_enemy() -> void:
-	var e := ENEMY_SCENE.instantiate() as Enemy
+	var e := _enemy_scene.instantiate() as Enemy
 	prepare_enemy(e)
 	enemy.append(e)
 	actors.add_child(e)
 
 
 func _spawn_asteroid() -> void:
-	var a := ASTEROID_SCENE.instantiate() as Asteroid
+	var a := _asteroid_scene.instantiate() as Asteroid
 	prepare_asteroid(a)
 	asteroid.append(a)
 	actors.add_child(a)
@@ -536,11 +523,12 @@ func debug_skip() -> void:
 func updateMultishotText() -> void:
 	if not ship.superUnlocked:
 		multishotText.visible = false
-		if controlsText.text == "SPACE to SUPER" or controlsText.text == "SPACE to Super":
+		if not _restart_shown:
 			controlsText.visible = false
 		return
 	multishotText.visible = true
-	if ship.multishotCharge >= ship.MULTISHOT_CHARGE_MAX:
+	if ship.multishotCharge >= ship.MULTISHOT_CHARGE_MAX and not _restart_shown:
+		controlsText.text = _super_prompt()
 		controlsText.visible = true
 	multishotText.text = "Super: " + str(int(ship.multishotCharge)) + "/" + str(int(ship.MULTISHOT_CHARGE_MAX))
 
@@ -552,9 +540,9 @@ func updateHealthText() -> void:
 # Moved score calculation logic to collision function
 func updateScoreText() -> float:
 	if is_equal_approx(score, round(score)):
-		scoreText.text = "Score: " + str(int(score))
+		scoreText.text = "XP: " + str(int(score))
 	else:
-		scoreText.text = "Score: " + str(score)
+		scoreText.text = "XP: " + str(score)
 	return score
 
 
@@ -584,7 +572,7 @@ func enemyShot() -> void:
 			#Randomly adjust the shot by 2 degrees
 			targetAng += randf_range(-ENEMY_INACCURACY, ENEMY_INACCURACY)
 			#create a new projectile with the calulated data
-			var ep := ENEMY_PROJECTILE_SCENE.instantiate() as Projectile
+			var ep := _enemy_projectile_scene.instantiate() as Projectile
 			ep.setup(mid.x, mid.y, targetAng)
 			Main.current.play_sound("assets/sounds/ShootEnemy.ogg", 0.4)
 			enemyProjectiles.append(ep)
@@ -594,7 +582,7 @@ func enemyShot() -> void:
 
 
 func camera_flash(color: Color, duration: float) -> void:
-	var rect: ColorRect = FLASH_SCENE.instantiate()
+	var rect: ColorRect = _flash_scene.instantiate()
 	rect.color = color
 	$HUD/UI.add_child(rect)
 	var tw := create_tween()

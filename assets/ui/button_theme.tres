@@ -107,6 +107,18 @@ corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 corner_detail = 5
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 0.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0.1, 0.1, 0.1, 0.6)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+
 [resource]
 Button/colors/font_color = Color(0.875, 0.875, 0.875, 1)
 Button/colors/font_disabled_color = Color(0.875, 0.875, 0.875, 0.5)
@@ -131,3 +143,13 @@ ProgressBar/font_sizes/font_size = 20
 ProgressBar/fonts/font = ExtResource("1_font")
 ProgressBar/styles/background = SubResource("StyleBoxFlat_slider")
 ProgressBar/styles/fill = SubResource("StyleBoxFlat_grabber")
+TabContainer/colors/font_hovered_color = Color(0.95, 0.95, 0.95, 1)
+TabContainer/colors/font_selected_color = Color(1, 1, 1, 1)
+TabContainer/colors/font_unselected_color = Color(0.875, 0.875, 0.875, 1)
+TabContainer/font_sizes/font_size = 20
+TabContainer/fonts/font = ExtResource("1_font")
+TabContainer/styles/panel = SubResource("StyleBoxFlat_panel")
+TabContainer/styles/tab_focus = SubResource("StyleBoxFlat_focus")
+TabContainer/styles/tab_hovered = SubResource("StyleBoxFlat_hover")
+TabContainer/styles/tab_selected = SubResource("StyleBoxFlat_pressed")
+TabContainer/styles/tab_unselected = SubResource("StyleBoxFlat_normal")

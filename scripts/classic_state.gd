@@ -22,12 +22,6 @@ var _sector_won: bool = false
 var _sector_time: float = 0.0
 var _sector_fading: bool = false
 
-const CREDITS_SCENE := preload("res://scenes/credits.tscn")
-
-
-func _validate_property(property: Dictionary) -> void:
-	if str(property.name).begins_with("ENDLESS_") or str(property.name) == "Endless":
-		property.usage = PROPERTY_USAGE_NO_EDITOR
 
 
 func begin_mode() -> void:
@@ -161,7 +155,7 @@ func startWave() -> void:
 
 
 func spawnBoss(assetID: int = 0, bossType: int = 0) -> void:
-	boss = BOSS_SCENE.instantiate() as Boss
+	boss = _boss_scene.instantiate() as Boss
 	boss.setup(0, -100, assetID, bossType) # Slightly off the top of the screen
 	actors.add_child(boss)
 	boss.position.x = (Main.WIDTH - boss.width()) / 2.0
@@ -170,7 +164,7 @@ func spawnBoss(assetID: int = 0, bossType: int = 0) -> void:
 
 
 func _fade_to_credits() -> void:
-	var credits := CREDITS_SCENE.instantiate() as Control
+	var credits := Main.scene("res://scenes/credits.tscn").instantiate() as Control
 	credits.set("play_music_on_ready", false)
 	credits.modulate.a = 0.0
 	credits.set("on_closed", func() -> void:

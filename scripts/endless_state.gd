@@ -1,6 +1,48 @@
 class_name EndlessState
 extends PlayState
 
+@export_group("Endless")
+@export var ENDLESS_XP_START: float = 5000.0
+@export var ENDLESS_XP_RAMP_PERCENT: float = 1.15
+@export var ENDLESS_SUPER_CHARGE_RAMP: float = 2.0
+@export var ENDLESS_SUPER_CHARGE_MIN: float = 4.0
+@export var ENDLESS_SUPER_CHARGE_START: float = 20.0
+@export var ENDLESS_SUPER_SHOTS_RAMP: float = 2.0
+@export var ENDLESS_SUPER_SHOTS_CAP: float = 24.0
+@export var ENDLESS_SUPER_SHOTS_START: float = 8.0
+@export var ENDLESS_SUPER_PEN_RAMP: float = 1.0
+@export var ENDLESS_SUPER_PEN_CAP: float = 10.0
+@export var ENDLESS_SUPER_PEN_START: float = 3.0
+@export var ENDLESS_GUNS_RAMP: float = 1.0
+@export var ENDLESS_GUNS_CAP: float = 14.0
+@export var ENDLESS_GUNS_SPEED_RAMP: float = 25.0
+@export var ENDLESS_GUNS_SPEED_CAP: float = 500.0
+@export var ENDLESS_ARMOR_START: int = 3
+@export var ENDLESS_ARMOR_AMOUNT: int = 1
+@export var ENDLESS_ARMOR_CAP: int = 8
+@export var ENDLESS_DRONE_AMOUNT: int = 1
+@export var ENDLESS_DRONE_CAP: int = 3
+@export var ENDLESS_RAMP_TIME: float = 30.0
+@export var ENDLESS_ENEMY_INTERVAL: float = 1.5
+@export var ENDLESS_ENEMY_INTERVAL_RAMP: float = 0.1
+@export var ENDLESS_ENEMY_INTERVAL_MIN: float = 0.35
+@export var ENDLESS_ASTEROID_INTERVAL: float = 0.8
+@export var ENDLESS_ASTEROID_INTERVAL_RAMP: float = 0.05
+@export var ENDLESS_ASTEROID_INTERVAL_MIN: float = 0.2
+@export var ENDLESS_MAX_ENEMIES: int = 8
+@export var ENDLESS_MAX_ENEMIES_RAMP: int = 1
+@export var ENDLESS_MAX_ENEMIES_CAP: int = 24
+@export var ENDLESS_MAX_ASTEROIDS: int = 12
+@export var ENDLESS_MAX_ASTEROIDS_RAMP: int = 2
+@export var ENDLESS_MAX_ASTEROIDS_CAP: int = 40
+@export var ENDLESS_ENEMY_SPEED: int = 55
+@export var ENDLESS_ENEMY_SPEED_RAMP: int = 5
+@export var ENDLESS_ENEMY_SPEED_CAP: int = 140
+@export var ENDLESS_ASTEROID_SPEED: int = 100
+@export var ENDLESS_ASTEROID_SPEED_RAMP: int = 10
+@export var ENDLESS_ASTEROID_SPEED_CAP: int = 220
+@export var ENDLESS_ASTEROID_DRIFT: float = 50.0
+
 var _enemyInterval: float = 1.5
 var _asteroidInterval: float = 0.8
 var _maxEnemies: int = 8
@@ -14,7 +56,6 @@ var _rampAcc: float = 0.0
 var _time: float = 0.0
 
 var _xp: float = 0.0
-var _xpGoal: float = 50.0
 var _level: int = 0
 var _pending: int = 0
 
@@ -46,7 +87,6 @@ func begin_mode() -> void:
 	_time = 0.0
 	_xp = 0.0
 	_level = 0
-	_xpGoal = _xp_goal()
 	_pending = 0
 	levelUp.visible = false
 	timerText.visible = true
@@ -58,8 +98,8 @@ func begin_mode() -> void:
 	ship.multishotCharge = 0.0
 	ship.PLAYER_HEALTH_MAX = ENDLESS_ARMOR_START
 	ship.health = ENDLESS_ARMOR_START
-	ship.gunProjectileSpeed = _scene_speed(Player.PLAYER_PROJECTILE_SCENE)
-	ship.superProjectileSpeed = _scene_speed(Player.SUPER_PROJECTILE_SCENE)
+	ship.gunProjectileSpeed = _scene_speed(Main.scene("res://scenes/player_projectile.tscn"))
+	ship.superProjectileSpeed = _scene_speed(Main.scene("res://scenes/super_projectile.tscn"))
 	_draw_xp()
 	_apply_caps()
 	updateHealthText()
@@ -73,12 +113,13 @@ func choosing_upgrade() -> bool:
 	return _pending > 0
 
 
-func on_kill() -> void:
-	_xp += 1
-	while _xpGoal > 0.0 and _xp >= _xpGoal:
-		_xp -= _xpGoal
+func on_score(points: int) -> void:
+	_xp += points
+	var goal := _xp_goal()
+	while goal > 0.0 and _xp >= goal:
+		_xp -= goal
 		_level += 1
-		_xpGoal = _xp_goal()
+		goal = _xp_goal()
 		_grant_armor()
 		_pending += 1
 	_draw_xp()
@@ -262,11 +303,11 @@ func _apply_caps() -> void:
 
 
 func _xp_goal() -> float:
-	return float(maxi(ceili(ENDLESS_XP_KILLS * pow(ENDLESS_XP_RAMP_PERCENT, float(_level))), 1))
+	return float(maxi(ceili(ENDLESS_XP_START * pow(ENDLESS_XP_RAMP_PERCENT, float(_level))), 1))
 
 
 func _draw_xp() -> void:
-	var goal: float = maxf(_xpGoal, 1.0)
+	var goal: float = maxf(_xp_goal(), 1.0)
 	xpFill.anchor_right = clampf(_xp / goal, 0.0, 1.0)
 	xpFill.offset_right = 0.0
 	xpLevel.text = "LVL " + str(_level)
@@ -274,6 +315,7 @@ func _draw_xp() -> void:
 
 
 func tick_mode(elapsed: float) -> void:
+	_draw_xp()
 	if ship.alive:
 		_time += elapsed
 		var total := int(_time)

@@ -1,8 +1,6 @@
 class_name MenuState
 extends Node2D
 
-const OPTIONS_SCENE := preload("res://scenes/options.tscn")
-const CREDITS_SCENE := preload("res://scenes/credits.tscn")
 
 @onready var rulesText: Label = $UI/RulesText
 @onready var creditsPanel: ColorRect = $UI/CreditsPanel
@@ -99,7 +97,7 @@ func optionsMenu() -> void:
 	if _leaving:
 		return
 	_show_menu(false)
-	var options := OPTIONS_SCENE.instantiate() as OptionsState
+	var options := Main.scene("res://scenes/options.tscn").instantiate() as OptionsState
 	if options == null:
 		_show_menu(true)
 		return
@@ -128,16 +126,24 @@ func _show_menu(show_menu: bool) -> void:
 		creditsActive = false
 
 
-func showRules() -> void:
-	rulesText.visible = not rulesText.visible
-	creditsPanel.visible = rulesText.visible
-	if rulesText.visible:
-		creditsText.visible = false
-		creditsActive = false
+func controlsMenu() -> void:
+	if _leaving:
+		return
+	_show_menu(false)
+	var controls := Main.scene("res://scenes/controls.tscn").instantiate() as ControlsState
+	controls.on_closed = _on_controls_closed
+	add_child(controls)
+
+
+func _on_controls_closed() -> void:
+	if is_inside_tree():
+		_show_menu(true)
+		if Main.using_controller:
+			rulesButton.grab_focus()
 
 
 func showCredits() -> void:
 	_show_menu(false)
-	var credits := CREDITS_SCENE.instantiate()
+	var credits := Main.scene("res://scenes/credits.tscn").instantiate()
 	credits.on_closed = _on_options_closed
 	add_child(credits)

@@ -5,14 +5,16 @@ const WIDTH: int = 640
 const HEIGHT: int = 360
 const SAVE_PATH: String = "user://LeftAliened.cfg"
 
-const MENU_SCENE := preload("res://scenes/menu.tscn")
-const CLASSIC_SCENE := preload("res://scenes/classic.tscn")
-const ENDLESS_SCENE := preload("res://scenes/endless.tscn")
-
 static var current: Main
 static var bg_y: float = 0.0
 static var endless: bool = false
 static var using_controller: bool = false
+static var pad: int = -1
+
+@export var mouse_idle_hide_seconds: float = 2.0
+var _mouse_idle: float = 0.0
+var _nav_lock_until: int = 0
+var _pad: int = -1
 
 var music_volume: float = 1.0
 var sfx_volume: float = 1.0
@@ -50,6 +52,9 @@ func _ready() -> void:
 	_apply_bus("SFX", sfx_volume)
 	_bind_ui_joypad("ui_accept", JOY_BUTTON_A)
 	_bind_ui_joypad("ui_cancel", JOY_BUTTON_B)
+	_choose_pad()
+	Input.joy_connection_changed.connect(func(_device, _connected): _choose_pad())
+	ControlsState.load_bindings()
 	change_state("menu")
 
 
@@ -62,7 +67,79 @@ func _bind_ui_joypad(action: String, button: JoyButton) -> void:
 	InputMap.action_add_event(action, joy)
 
 
+func _process(delta: float) -> void:
+	if Input.mouse_mode == Input.MOUSE_MODE_VISIBLE and mouse_idle_hide_seconds > 0.0:
+		_mouse_idle += delta
+		if _mouse_idle >= mouse_idle_hide_seconds:
+			Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
+	if using_controller and not ControlsState.listening:
+		_ensure_button_focus()
+
+
+func _choose_pad() -> void:
+	var pads := Input.get_connected_joypads()
+	var sony := -1
+	var plain := -1
+	for id in pads:
+		var info := Input.get_joy_info(id)
+		var vendor := int(info.get("vendor_id", 0))
+		var joy_name := Input.get_joy_name(id).to_lower()
+		if vendor == 0x054C or "dualsense" in joy_name or "dualshock" in joy_name or "ps5" in joy_name or "sony" in joy_name:
+			sony = id
+		elif "xinput" in joy_name or "xbox 360" in joy_name:
+			continue
+		elif plain < 0:
+			plain = id
+	if sony >= 0:
+		_pad = sony
+	elif plain >= 0:
+		_pad = plain
+	elif pads.size() > 0:
+		_pad = pads[0]
+	else:
+		_pad = -1
+	pad = _pad
+
+
+func _repeat_nav(event: InputEvent) -> bool:
+	if not (event is InputEventJoypadButton or event is InputEventJoypadMotion):
+		return false
+	if not event.is_pressed() or event.is_echo():
+		return false
+	if not (event.is_action("ui_up") or event.is_action("ui_down") or event.is_action("ui_left") or event.is_action("ui_right")):
+		return false
+	var now := Time.get_ticks_msec()
+	if now < _nav_lock_until:
+		get_viewport().set_input_as_handled()
+		return true
+	_nav_lock_until = now + 50
+	return false
+
+
+func _foreign_pad(event: InputEvent) -> bool:
+	if _pad < 0:
+		return false
+	if event is InputEventJoypadButton or event is InputEventJoypadMotion:
+		return event.device >= 0 and event.device != _pad
+	return false
+
+
+func _show_mouse() -> void:
+	_mouse_idle = 0.0
+	if Input.mouse_mode == Input.MOUSE_MODE_HIDDEN:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
 func _input(event: InputEvent) -> void:
+	if (event is InputEventMouseMotion and event.relative.length() > 0.0) or (event is InputEventMouseButton and event.pressed):
+		_show_mouse()
+	if _foreign_pad(event):
+		get_viewport().set_input_as_handled()
+		return
+	if _repeat_nav(event):
+		return
+	if ControlsState.listening:
+		return
 	var was_controller := using_controller
 	if event is InputEventJoypadButton and event.pressed:
 		using_controller = true
@@ -86,6 +163,8 @@ func _input(event: InputEvent) -> void:
 				return
 			if button.toggle_mode:
 				button.set_pressed(not button.button_pressed)
+				if button.get_class() == "Button":
+					button.pressed.emit()
 			else:
 				button.pressed.emit()
 			get_viewport().set_input_as_handled()
@@ -98,14 +177,37 @@ func _input(event: InputEvent) -> void:
 
 
 func focus_ui() -> void:
+	_ensure_button_focus()
+
+
+func _ensure_button_focus() -> void:
 	var owner := get_viewport().gui_get_focus_owner()
-	if owner is Control and (owner as Control).is_visible_in_tree() and (owner as Control).focus_mode != Control.FOCUS_NONE:
+	if owner is BaseButton and (owner as BaseButton).is_visible_in_tree() and not (owner as BaseButton).disabled and (owner as BaseButton).focus_mode != Control.FOCUS_NONE:
 		return
-	for name in ["SuperButton", "GunsButton", "DroneButton", "ShipButton", "ContinueButton", "BackButton", "PlayButton"]:
-		var button := _top_button(self, [name])
-		if button != null:
-			button.grab_focus()
-			return
+	var button := _first_button(self)
+	if button != null:
+		button.grab_focus()
+
+
+func _first_button(node: Node) -> Button:
+	var best: Button = null
+	if node is Button:
+		var button := node as Button
+		if button.is_visible_in_tree() and not button.disabled and button.focus_mode != Control.FOCUS_NONE:
+			best = button
+	for child in node.get_children():
+		var found := _first_button(child)
+		if found != null and (best == null or _is_before(found, best)):
+			best = found
+	return best
+
+
+func _is_before(a: Control, b: Control) -> bool:
+	var ap := a.get_global_rect().position
+	var bp := b.get_global_rect().position
+	if absf(ap.y - bp.y) > 4.0:
+		return ap.y < bp.y
+	return ap.x < bp.x
 
 
 func _top_button(node: Node, names: Array) -> Button:
@@ -132,14 +234,18 @@ func _exit_tree() -> void:
 		current = null
 
 
+static func scene(path: String) -> PackedScene:
+	return ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_REPLACE) as PackedScene
+
+
 func change_state(which: String) -> void:
 	if state:
 		state.queue_free()
 		state = null
-	var packed: PackedScene = MENU_SCENE
+	var path := "res://scenes/menu.tscn"
 	if which == "play":
-		packed = ENDLESS_SCENE if endless else CLASSIC_SCENE
-	state = packed.instantiate()
+		path = "res://scenes/endless.tscn" if endless else "res://scenes/classic.tscn"
+	state = scene(path).instantiate()
 	add_child(state)
 
 

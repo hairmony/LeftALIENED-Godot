@@ -35,13 +35,17 @@ var swapRestoreControls: bool = true
 var _prev_mouse := Vector2.ZERO
 
 
-const TRAIL_SCENE := preload("res://scenes/dodge_trail.tscn")
-const PLAYER_PROJECTILE_SCENE := preload("res://scenes/player_projectile.tscn")
-const SUPER_PROJECTILE_SCENE := preload("res://scenes/super_projectile.tscn")
-const DRONE_SCENE := preload("res://scenes/drone.tscn")
+var _trail_scene: PackedScene
+var _shot_scene: PackedScene
+var _super_scene: PackedScene
+var _drone_scene: PackedScene
 
 
 func _ready() -> void:
+	_trail_scene = Main.scene("res://scenes/dodge_trail.tscn")
+	_shot_scene = Main.scene("res://scenes/player_projectile.tscn")
+	_super_scene = Main.scene("res://scenes/super_projectile.tscn")
+	_drone_scene = Main.scene("res://scenes/drone.tscn")
 	fireRate = 1.0 / PLAYER_SHOTS_PER_SEC
 	health = PLAYER_HEALTH_MAX
 
@@ -77,8 +81,11 @@ func update(elapsed: float) -> void:
 	if not exists:
 		return
 
-	var moveX: float = Input.get_axis("move_left", "move_right")
-	var moveY: float = Input.get_axis("move_up", "move_down")
+	var move := _stick_vector("move_left", "move_right", "move_up", "move_down")
+	if move == Vector2.ZERO:
+		move = Vector2(Input.get_axis("move_left", "move_right"), Input.get_axis("move_up", "move_down"))
+	var moveX: float = move.x
+	var moveY: float = move.y
 
 	# Apply final movement
 	if controlsEnabled:
@@ -90,7 +97,7 @@ func update(elapsed: float) -> void:
 	if isDodging:
 		dodgeTimer += elapsed
 		# Dodge trail!
-		var trail: Sprite2D = TRAIL_SCENE.instantiate()
+		var trail: Sprite2D = _trail_scene.instantiate()
 		trail.texture = sprite.texture
 		trail.scale = sprite.scale
 		trail.rotation_degrees = angle
@@ -117,15 +124,35 @@ func update(elapsed: float) -> void:
 		position.y = clampf(position.y, 0, Main.HEIGHT - height())
 
 
+func _pads() -> Array:
+	if Main.pad >= 0:
+		return [Main.pad]
+	return Input.get_connected_joypads()
+
+
 func _aim_stick_length() -> float:
 	var best := TouchControls.aim_vector.length()
-	for pad in Input.get_connected_joypads():
+	for pad in _pads():
 		var aim := Vector2(
 			_joy_action_axis(pad, "aim_right") - _joy_action_axis(pad, "aim_left"),
 			_joy_action_axis(pad, "aim_down") - _joy_action_axis(pad, "aim_up")
 		)
 		best = maxf(best, aim.length())
 	return best
+
+
+func _stick_vector(left: String, right: String, up: String, down: String) -> Vector2:
+	var best := Vector2.ZERO
+	for pad in _pads():
+		var joy := Vector2(
+			_joy_action_axis(pad, right) - _joy_action_axis(pad, left),
+			_joy_action_axis(pad, down) - _joy_action_axis(pad, up)
+		)
+		if joy.length() > best.length():
+			best = joy
+	if best.length() < 0.15:
+		return Vector2.ZERO
+	return best.limit_length(1.0)
 
 
 func _joy_action_axis(pad: int, action: String) -> float:
@@ -143,7 +170,9 @@ func aim() -> void:
 	# --- Aiming Logic ---
 
 	# Check for active Gamepad aiming
-	var aim := Input.get_vector("aim_left", "aim_right", "aim_up", "aim_down")
+	var aim := _stick_vector("aim_left", "aim_right", "aim_up", "aim_down")
+	if aim == Vector2.ZERO:
+		aim = Input.get_vector("aim_left", "aim_right", "aim_up", "aim_down")
 	if TouchControls.aim_vector.length() > 0.05:
 		aim = TouchControls.aim_vector
 	if aim != Vector2.ZERO:
@@ -210,9 +239,12 @@ func combat(elapsed: float) -> void:
 	var play := PlayState.current
 	fireTimer += elapsed
 	# Default: shoot 1 projectile with LMB or hold LMB
-	var stick_firing := _aim_stick_length() >= 0.75
-	var shooting: bool = (Input.is_action_pressed("shoot") or stick_firing) and fireTimer >= fireRate
-	if shooting or Input.is_action_just_pressed("shoot"):
+	var stick_firing := _aim_stick_length() >= TouchControls.shoot_at
+	var finger_down := TouchControls.touching > 0
+	var shoot_held := Input.is_action_pressed("shoot") and not finger_down
+	var shoot_tap := Input.is_action_just_pressed("shoot") and not finger_down
+	var shooting: bool = (shoot_held or stick_firing) and fireTimer >= fireRate
+	if shooting or shoot_tap:
 		Main.current.play_sound("assets/sounds/ShootPlayer.ogg", 0.4)
 		fireTimer = 0.0
 		var angleDeg: float = angle - 90.0
@@ -221,7 +253,7 @@ func combat(elapsed: float) -> void:
 		var mid := get_midpoint()
 		var spawnX: float = mid.x + cos(angleRad) * offset
 		var spawnY: float = mid.y + sin(angleRad) * offset
-		var p := PLAYER_PROJECTILE_SCENE.instantiate() as Projectile
+		var p := _shot_scene.instantiate() as Projectile
 		if gunProjectileSpeed >= 0.0:
 			p.speed = gunProjectileSpeed
 		p.setup(spawnX, spawnY, angleDeg)
@@ -240,7 +272,7 @@ func combat(elapsed: float) -> void:
 			for _i in shot_count:
 				# We use ship.angle here to base the shot direction on where the ship is facing
 				var shot_mid := get_midpoint()
-				var shot := SUPER_PROJECTILE_SCENE.instantiate() as Projectile
+				var shot := _super_scene.instantiate() as Projectile
 				if superProjectileSpeed >= 0.0:
 					shot.speed = superProjectileSpeed
 				shot.setup(shot_mid.x, shot_mid.y, angle + angleIncrement)
@@ -286,7 +318,7 @@ func _ensure_drones() -> void:
 	if play == null:
 		return
 	while _drones.size() < droneCount:
-		var follower := DRONE_SCENE.instantiate() as Drone
+		var follower := _drone_scene.instantiate() as Drone
 		follower.slot = _drones.size()
 		play.actors.add_child(follower)
 		follower.position = Vector2(get_midpoint().x - follower.width() * 0.5, Main.HEIGHT)

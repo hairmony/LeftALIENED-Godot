@@ -11,7 +11,7 @@ extends Actor
 @export var projectileSpeed: float = 275.0
 @export var behind: float = 28.0
 
-const DRONE_PROJECTILE_SCENE := preload("res://scenes/drone_projectile.tscn")
+var _shot_scene: PackedScene
 
 var slot: int = 0
 var slotCount: int = 1
@@ -22,6 +22,7 @@ var _shotWait: float = 0.0
 
 
 func _ready() -> void:
+	_shot_scene = Main.scene("res://scenes/drone_projectile.tscn")
 	sprite = get_node("Sprite") as Sprite2D
 	_pivot_sprite()
 	_fireTimer = float(slot) * 0.15
@@ -107,7 +108,7 @@ func _shoot(ship: Player, elapsed: float, play: PlayState, target: Actor) -> voi
 	var angle_deg := rad_to_deg(atan2(aim_at.y, aim_at.x))
 	angle_deg += randf_range(-inaccuracy, inaccuracy)
 	var angle_rad := deg_to_rad(angle_deg)
-	var shot := DRONE_PROJECTILE_SCENE.instantiate() as Projectile
+	var shot := _shot_scene.instantiate() as Projectile
 	shot.speed = projectileSpeed
 	shot.setup(mid.x + cos(angle_rad) * 8.0, mid.y + sin(angle_rad) * 8.0, angle_deg)
 	play.projectiles.append(shot)

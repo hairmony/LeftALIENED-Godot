@@ -1,0 +1,64 @@
+[gd_scene format=3 uid="uid://6epb5ap77ytl"]
+
+[ext_resource type="Script" uid="uid://cjm82710n8pd2" path="res://scripts/controls_state.gd" id="1_controls"]
+[ext_resource type="PackedScene" uid="uid://jc5fdv3ufugl" path="res://scenes/ui_button.tscn" id="2_btn"]
+[ext_resource type="Theme" uid="uid://r4ha0qas57o7" path="res://assets/ui/button_theme.tres" id="3_theme"]
+
+[node name="ControlsState" type="Node2D" unique_id=1888016823]
+script = ExtResource("1_controls")
+
+[node name="UI" type="Control" parent="." unique_id=1189704875]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 640.0
+offset_bottom = 360.0
+mouse_filter = 2
+
+[node name="Tabs" type="TabContainer" parent="UI" unique_id=837629808]
+layout_mode = 0
+offset_left = 25.0
+offset_top = 16.0
+offset_right = 615.0
+offset_bottom = 300.0
+theme = ExtResource("3_theme")
+current_tab = 0
+
+[node name="Keyboard" type="ScrollContainer" parent="UI/Tabs" unique_id=1411460965]
+layout_mode = 2
+horizontal_scroll_mode = 0
+metadata/_tab_index = 0
+
+[node name="Rows" type="VBoxContainer" parent="UI/Tabs/Keyboard" unique_id=500787379]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="Gamepad" type="ScrollContainer" parent="UI/Tabs" unique_id=2109387235]
+visible = false
+layout_mode = 2
+horizontal_scroll_mode = 0
+metadata/_tab_index = 1
+
+[node name="Rows" type="VBoxContainer" parent="UI/Tabs/Gamepad" unique_id=335142374]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="BackButton" parent="UI" unique_id=1698827439 instance=ExtResource("2_btn")]
+layout_mode = 0
+offset_left = 25.0
+offset_top = 308.0
+offset_right = 135.0
+offset_bottom = 336.0
+text = "Back"
+
+[node name="ResetButton" parent="UI" unique_id=124410056 instance=ExtResource("2_btn")]
+layout_mode = 0
+offset_left = 139.0
+offset_top = 308.0
+offset_right = 249.0
+offset_bottom = 336.0
+text = "Reset"
+
+[connection signal="pressed" from="UI/BackButton" to="." method="backToMenu"]
+[connection signal="pressed" from="UI/ResetButton" to="." method="resetBindings"]

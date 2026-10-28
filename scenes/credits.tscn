@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://qrp63g24indq" path="res://scripts/credits_state.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://book6e4gp83or" path="res://scenes/credits_label.tscn" id="2_label"]
-[ext_resource type="PackedScene" path="res://scenes/ui_button.tscn" id="3_btn"]
+[ext_resource type="PackedScene" uid="uid://jc5fdv3ufugl" path="res://scenes/ui_button.tscn" id="3_btn"]
 
 [node name="Credits" type="Control" unique_id=1368551242]
 layout_mode = 3
@@ -12,7 +12,7 @@ offset_bottom = 360.0
 script = ExtResource("1_script")
 auto_scroll_speed = 30.0
 input_scroll_speed = 200.0
-scroll_restart_delay = 0.25
+scroll_restart_delay = 0.5
 
 [node name="Background" type="ColorRect" parent="." unique_id=2133080174]
 layout_mode = 0

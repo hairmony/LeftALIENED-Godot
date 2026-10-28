@@ -1,7 +1,7 @@
 class_name Boss
 extends Actor
 
-const BOSS_PROJECTILE_SCENE := preload("res://scenes/boss_projectile.tscn")
+var _shot_scene: PackedScene
 
 @export var BOSS_HP_MAX: int = 75
 
@@ -24,6 +24,12 @@ var gapDirection: int = 1
 
 
 var _set_up: bool = false
+
+func _projectile() -> Projectile:
+	if _shot_scene == null:
+		_shot_scene = Main.scene("res://scenes/boss_projectile.tscn")
+	return _shot_scene.instantiate() as Projectile
+
 
 func setup(X: float = 0.0, Y: float = 0.0, assetID: int = 0, boss_type: int = 0) -> void:
 	if _set_up:
@@ -103,7 +109,7 @@ func fire_pattern_circle() -> void:
 		for i in BOSS_CIRCLE_SHOT_AMOUNT:
 			var ang := patternAngle + (i * angleIncrement)
 			var mid := get_midpoint()
-			var p := BOSS_PROJECTILE_SCENE.instantiate() as Projectile
+			var p := _projectile()
 			p.setup(mid.x, mid.y, ang)
 			play.enemyProjectiles.append(p)
 			play.actors.add_child(p)
@@ -142,7 +148,7 @@ func fire_pattern_wall() -> void:
 			continue
 		var bulletX: float = i * bulletSpacing
 		# Fire straight down (angle is 0 in a system where 0 is up)
-		var p := BOSS_PROJECTILE_SCENE.instantiate() as Projectile
+		var p := _projectile()
 		p.setup(bulletX, 0, 90)
 		play.enemyProjectiles.append(p)
 		play.actors.add_child(p)

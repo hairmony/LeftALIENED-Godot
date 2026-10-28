@@ -2,18 +2,31 @@ class_name TouchControls
 extends CanvasLayer
 
 static var aim_vector: Vector2 = Vector2.ZERO
+static var touching: int = 0
+static var deadzone: float = 0.08
+static var shoot_at: float = 0.75
+
+@export_range(0.0, 1.0, 0.01) var stick_deadzone: float = 0.08
+@export_range(0.0, 1.0, 0.01) var fire_threshold: float = 0.75
+
+var _touches: Dictionary = {}
 
 @onready var move_stick: Control = $UI/MoveZone
 @onready var aim_stick: Control = $UI/AimZone
+@onready var super_button: Button = $UI/SuperButton
 
 
 func _ready() -> void:
+	deadzone = stick_deadzone
+	shoot_at = fire_threshold
 	visible = DisplayServer.is_touchscreen_available()
 	move_stick.changed.connect(_apply_move)
 	aim_stick.changed.connect(_apply_aim)
 
 
 func _process(_elapsed: float) -> void:
+	deadzone = stick_deadzone
+	shoot_at = fire_threshold
 	var show: bool = DisplayServer.is_touchscreen_available()
 	if PauseState.isPaused or (PlayState.current != null and (PlayState.current.choosing_upgrade() or PlayState.current.gameOverText.visible)):
 		show = false
@@ -21,6 +34,7 @@ func _process(_elapsed: float) -> void:
 		visible = show
 		if not show:
 			_release_all()
+	_update_super()
 
 
 func _exit_tree() -> void:
@@ -36,6 +50,25 @@ func _apply_aim(vector: Vector2) -> void:
 	aim_vector = vector
 	_axis("aim_left", "aim_right", vector.x)
 	_axis("aim_up", "aim_down", vector.y)
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			_touches[event.index] = true
+		else:
+			_touches.erase(event.index)
+		touching = _touches.size()
+		if aim_vector.length() < fire_threshold:
+			Input.action_release("shoot")
+
+
+func _update_super() -> void:
+	var ready := false
+	if PlayState.current != null and PlayState.current.ship != null:
+		var ship := PlayState.current.ship
+		ready = ship.superUnlocked and ship.controlsEnabled and ship.multishotCharge >= ship.MULTISHOT_CHARGE_MAX
+	super_button.disabled = not ready
 
 
 func _on_super_down() -> void:
@@ -57,10 +90,10 @@ func _on_pause_down() -> void:
 
 
 func _axis(negative: String, positive: String, value: float) -> void:
-	if value <= -0.08:
+	if value <= -stick_deadzone:
 		Input.action_release(positive)
 		Input.action_press(negative, -value)
-	elif value >= 0.08:
+	elif value >= stick_deadzone:
 		Input.action_release(negative)
 		Input.action_press(positive, value)
 	else:
@@ -70,5 +103,7 @@ func _axis(negative: String, positive: String, value: float) -> void:
 
 func _release_all() -> void:
 	aim_vector = Vector2.ZERO
+	_touches.clear()
+	touching = 0
 	for action in ["move_left", "move_right", "move_up", "move_down", "aim_left", "aim_right", "aim_up", "aim_down", "dodge", "super", "pause"]:
 		Input.action_release(action)

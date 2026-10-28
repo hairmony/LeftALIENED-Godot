@@ -9,6 +9,7 @@
 [node name="TouchControls" type="CanvasLayer" unique_id=1046092892]
 layer = 5
 script = ExtResource("1_touch")
+fire_threshold = 1.0
 
 [node name="UI" type="Control" parent="." unique_id=1817842403]
 layout_mode = 3
