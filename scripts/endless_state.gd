@@ -43,13 +43,7 @@ extends PlayState
 @export var ENDLESS_ASTEROID_SPEED_CAP: int = 220
 @export var ENDLESS_ASTEROID_DRIFT: float = 50.0
 
-var _enemyInterval: float = 1.5
-var _asteroidInterval: float = 0.8
-var _maxEnemies: int = 8
-var _maxAsteroids: int = 12
-var _enemySpeed: int = 55
-var _asteroidSpeed: int = 100
-var _asteroidDrift: float = 50.0
+var _ramps: int = 0
 var _endlessEnemyAcc: float = 0.0
 var _endlessAsteroidAcc: float = 0.0
 var _rampAcc: float = 0.0
@@ -74,13 +68,7 @@ func begin_mode() -> void:
 	waveText.visible = true
 	waveText.text = "Nothing LEFT to prove."
 	_wave_hide = 2.0
-	_enemyInterval = ENDLESS_ENEMY_INTERVAL
-	_asteroidInterval = ENDLESS_ASTEROID_INTERVAL
-	_maxEnemies = ENDLESS_MAX_ENEMIES
-	_maxAsteroids = ENDLESS_MAX_ASTEROIDS
-	_enemySpeed = ENDLESS_ENEMY_SPEED
-	_asteroidSpeed = ENDLESS_ASTEROID_SPEED
-	_asteroidDrift = ENDLESS_ASTEROID_DRIFT
+	_ramps = 0
 	_endlessEnemyAcc = 0.0
 	_endlessAsteroidAcc = 0.0
 	_rampAcc = 0.0
@@ -296,10 +284,6 @@ func _apply_caps() -> void:
 		if ship.health > ship.PLAYER_HEALTH_MAX:
 			ship.health = ship.PLAYER_HEALTH_MAX
 		ship.droneCount = _limit_int(ship.droneCount, ENDLESS_DRONE_CAP)
-	_maxEnemies = _limit_int(_maxEnemies, ENDLESS_MAX_ENEMIES_CAP)
-	_maxAsteroids = _limit_int(_maxAsteroids, ENDLESS_MAX_ASTEROIDS_CAP)
-	_enemySpeed = _limit_int(_enemySpeed, ENDLESS_ENEMY_SPEED_CAP)
-	_asteroidSpeed = _limit_int(_asteroidSpeed, ENDLESS_ASTEROID_SPEED_CAP)
 
 
 func _xp_goal() -> float:
@@ -326,37 +310,56 @@ func tick_mode(elapsed: float) -> void:
 			_rampAcc = 0.0
 			_apply_ramp()
 	_endlessEnemyAcc += elapsed
-	if _endlessEnemyAcc >= _enemyInterval:
+	if _endlessEnemyAcc >= _enemy_interval():
 		_endlessEnemyAcc = 0.0
-		if _count_living(enemy) < _maxEnemies:
+		if _count_living(enemy) < _max_enemies():
 			_spawn_enemy()
 	_endlessAsteroidAcc += elapsed
-	if _endlessAsteroidAcc >= _asteroidInterval:
+	if _endlessAsteroidAcc >= _asteroid_interval():
 		_endlessAsteroidAcc = 0.0
-		if _count_living(asteroid) < _maxAsteroids:
+		if _count_living(asteroid) < _max_asteroids():
 			_spawn_asteroid()
 
 
+func _enemy_interval() -> float:
+	return maxf(ENDLESS_ENEMY_INTERVAL_MIN, ENDLESS_ENEMY_INTERVAL - ENDLESS_ENEMY_INTERVAL_RAMP * float(_ramps))
+
+
+func _asteroid_interval() -> float:
+	return maxf(ENDLESS_ASTEROID_INTERVAL_MIN, ENDLESS_ASTEROID_INTERVAL - ENDLESS_ASTEROID_INTERVAL_RAMP * float(_ramps))
+
+
+func _max_enemies() -> int:
+	return _limit_int(ENDLESS_MAX_ENEMIES + ENDLESS_MAX_ENEMIES_RAMP * _ramps, ENDLESS_MAX_ENEMIES_CAP)
+
+
+func _max_asteroids() -> int:
+	return _limit_int(ENDLESS_MAX_ASTEROIDS + ENDLESS_MAX_ASTEROIDS_RAMP * _ramps, ENDLESS_MAX_ASTEROIDS_CAP)
+
+
+func _enemy_speed() -> int:
+	return _limit_int(ENDLESS_ENEMY_SPEED + ENDLESS_ENEMY_SPEED_RAMP * _ramps, ENDLESS_ENEMY_SPEED_CAP)
+
+
+func _asteroid_speed() -> int:
+	return _limit_int(ENDLESS_ASTEROID_SPEED + ENDLESS_ASTEROID_SPEED_RAMP * _ramps, ENDLESS_ASTEROID_SPEED_CAP)
+
+
 func _apply_ramp() -> void:
-	_enemyInterval = maxf(ENDLESS_ENEMY_INTERVAL_MIN, _enemyInterval - ENDLESS_ENEMY_INTERVAL_RAMP)
-	_asteroidInterval = maxf(ENDLESS_ASTEROID_INTERVAL_MIN, _asteroidInterval - ENDLESS_ASTEROID_INTERVAL_RAMP)
-	_maxEnemies = _limit_int(_maxEnemies + ENDLESS_MAX_ENEMIES_RAMP, ENDLESS_MAX_ENEMIES_CAP)
-	_maxAsteroids = _limit_int(_maxAsteroids + ENDLESS_MAX_ASTEROIDS_RAMP, ENDLESS_MAX_ASTEROIDS_CAP)
-	_enemySpeed = _limit_int(_enemySpeed + ENDLESS_ENEMY_SPEED_RAMP, ENDLESS_ENEMY_SPEED_CAP)
-	_asteroidSpeed = _limit_int(_asteroidSpeed + ENDLESS_ASTEROID_SPEED_RAMP, ENDLESS_ASTEROID_SPEED_CAP)
+	_ramps += 1
 	for e in enemy:
 		if e is Enemy and e.exists:
 			var foe := e as Enemy
 			var dir := signf(foe.velocity.x)
 			if dir == 0.0:
 				dir = 1.0
-			foe.ENEMY_SPEED = _enemySpeed
-			foe.velocity.x = dir * _enemySpeed
+			foe.ENEMY_SPEED = _enemy_speed()
+			foe.velocity.x = dir * float(_enemy_speed())
 	for a in asteroid:
 		if a is Asteroid and a.exists:
 			var rock := a as Asteroid
-			rock.ASTEROID_SPEED = _asteroidSpeed
-			rock.drift = _asteroidDrift
+			rock.ASTEROID_SPEED = _asteroid_speed()
+			rock.drift = ENDLESS_ASTEROID_DRIFT
 
 
 func _limit_float(value: float, cap: float) -> float:
@@ -372,9 +375,9 @@ func _limit_int(value: int, cap: int) -> int:
 
 
 func prepare_enemy(e: Enemy) -> void:
-	e.ENEMY_SPEED = _enemySpeed
+	e.ENEMY_SPEED = _enemy_speed()
 
 
 func prepare_asteroid(a: Asteroid) -> void:
-	a.ASTEROID_SPEED = _asteroidSpeed
-	a.drift = _asteroidDrift
+	a.ASTEROID_SPEED = _asteroid_speed()
+	a.drift = ENDLESS_ASTEROID_DRIFT

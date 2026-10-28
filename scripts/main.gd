@@ -245,7 +245,7 @@ func change_state(which: String) -> void:
 	var path := "res://scenes/menu.tscn"
 	if which == "play":
 		path = "res://scenes/endless.tscn" if endless else "res://scenes/classic.tscn"
-	state = scene(path).instantiate()
+	state = (ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE_DEEP) as PackedScene).instantiate()
 	add_child(state)
 
 
