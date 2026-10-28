@@ -87,7 +87,15 @@ func _on_controls_closed() -> void:
 
 
 func _show_pause(show_pause: bool) -> void:
-	$Layer/UI.visible = show_pause
+	for child in $Layer/UI.get_children():
+		if child.name == "Dim":
+			child.visible = true
+			continue
+		if child.name == "RulesPanel" or child.name == "RulesText":
+			if not show_pause:
+				child.visible = false
+			continue
+		child.visible = show_pause
 
 
 func _set_play_hud(show_hud: bool) -> void:
