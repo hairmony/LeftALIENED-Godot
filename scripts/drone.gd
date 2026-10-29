@@ -15,6 +15,8 @@ var _shot_scene: PackedScene
 
 var slot: int = 0
 var slotCount: int = 1
+var target_slot: int = 0
+var target_pool: Array = []
 var arriving: bool = true
 var departing: bool = false
 var _fireTimer: float = 0.0
@@ -56,7 +58,7 @@ func follow(ship: Player, elapsed: float) -> void:
 	velocity = velocity.lerp(desired, t)
 	position += velocity * elapsed
 	var play := PlayState.current
-	var target := _nearest_target(play)
+	var target := _assigned_target()
 	if target != null:
 		var aim_at := target.get_midpoint() - get_midpoint()
 		_turn_toward(rad_to_deg(atan2(aim_at.y, aim_at.x)) + 90.0, elapsed)
@@ -79,20 +81,37 @@ func fly_away(ship: Player, elapsed: float) -> void:
 		departing = false
 
 
-func _nearest_target(play: PlayState) -> Actor:
+static func build_target_pool(play: PlayState, from: Vector2) -> Array:
+	var pool: Array = []
 	if play == null:
-		return null
-	var best: Actor = null
-	var best_dist := targetRange * targetRange
-	var mid := get_midpoint()
+		return pool
 	for a in play.asteroid:
-		if a == null or not a.alive or not a.exists or a.isDead:
-			continue
-		var dist := mid.distance_squared_to(a.get_midpoint())
-		if dist <= best_dist:
-			best_dist = dist
-			best = a
-	return best
+		if _is_target(a):
+			pool.append(a)
+	for e in play.enemy:
+		if _is_target(e):
+			pool.append(e)
+	if _is_target(play.boss):
+		pool.append(play.boss)
+	pool.sort_custom(func(a: Actor, b: Actor) -> bool:
+		return from.distance_squared_to(a.get_midpoint()) < from.distance_squared_to(b.get_midpoint())
+	)
+	return pool
+
+
+static func _is_target(a: Actor) -> bool:
+	return a != null and a.alive and a.exists and not a.isDead
+
+
+func _assigned_target() -> Actor:
+	if target_slot < 0 or target_slot >= target_pool.size():
+		return null
+	var target := target_pool[target_slot] as Actor
+	if not _is_target(target):
+		return null
+	if get_midpoint().distance_squared_to(target.get_midpoint()) > targetRange * targetRange:
+		return null
+	return target
 
 
 func _shoot(ship: Player, elapsed: float, play: PlayState, target: Actor) -> void:

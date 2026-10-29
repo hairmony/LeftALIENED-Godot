@@ -224,7 +224,10 @@ License: [url=https://github.com/Maaack/Godot-Credits-Scene/blob/main/LICENSE.tx
 Linus Torvalds
 
 Source: [url=https://git-scm.com/downloads]git-scm.com[/url]
-License: [url=https://opensource.org/licenses/GPL-2.0]GNU General Public License version 2[/url]"
+License: [url=https://opensource.org/licenses/GPL-2.0]GNU General Public License version 2[/url]
+
+
+"
 fit_content = true
 scroll_active = false
 horizontal_alignment = 1

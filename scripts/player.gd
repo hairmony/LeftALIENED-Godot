@@ -300,6 +300,7 @@ func update_drones(elapsed: float) -> void:
 		for d in _drones:
 			(d as Drone).fly_away(self, elapsed)
 		return
+	var target_pool := Drone.build_target_pool(PlayState.current, get_midpoint())
 	for d in _drones:
 		var follower := d as Drone
 		if follower.departing or not follower.exists:
@@ -309,6 +310,8 @@ func update_drones(elapsed: float) -> void:
 		follower.alive = true
 		follower.exists = true
 		follower.slotCount = droneCount
+		follower.target_slot = follower.slot
+		follower.target_pool = target_pool
 		follower.follow(self, elapsed)
 		follower.visible = true
 
@@ -330,6 +333,7 @@ func _ensure_drones() -> void:
 		var follower := _drones[i] as Drone
 		follower.slot = i
 		follower.slotCount = droneCount
+		follower.target_slot = i
 
 
 func drones_departing() -> bool:
