@@ -94,6 +94,10 @@ func _show_modes() -> void:
 
 #Options menu
 func optionsMenu() -> void:
+	_open_options("Gameplay")
+
+
+func _open_options(tab_name: String) -> void:
 	if _leaving:
 		return
 	_show_menu(false)
@@ -101,13 +105,16 @@ func optionsMenu() -> void:
 	if options == null:
 		_show_menu(true)
 		return
-	options.on_closed = _on_options_closed
+	options.start_tab = tab_name
+	options.on_closed = _on_options_closed.bind(tab_name == "Controls")
 	add_child(options)
 
 
-func _on_options_closed() -> void:
+func _on_options_closed(from_controls: bool = false) -> void:
 	if is_inside_tree():
 		_show_menu(true)
+		if Main.using_controller and from_controls:
+			rulesButton.grab_focus()
 
 
 func _show_menu(show_menu: bool) -> void:
@@ -127,19 +134,7 @@ func _show_menu(show_menu: bool) -> void:
 
 
 func controlsMenu() -> void:
-	if _leaving:
-		return
-	_show_menu(false)
-	var controls := Main.scene("res://scenes/controls.tscn").instantiate() as ControlsState
-	controls.on_closed = _on_controls_closed
-	add_child(controls)
-
-
-func _on_controls_closed() -> void:
-	if is_inside_tree():
-		_show_menu(true)
-		if Main.using_controller:
-			rulesButton.grab_focus()
+	_open_options("Controls")
 
 
 func showCredits() -> void:

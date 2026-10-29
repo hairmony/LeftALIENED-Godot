@@ -1,14 +1,26 @@
 class_name OptionsState
 extends Node2D
 
-@onready var shipPreview: Sprite2D = $ShipPreview
-@onready var shipPreviewBG: ColorRect = $UI/ShipPreviewBG
-@onready var shipButton: Button = $UI/ShipButton
-@onready var musicSlider: HSlider = $UI/MusicSlider
-@onready var sfxSlider: HSlider = $UI/SfxSlider
-@onready var musicBar: ProgressBar = $UI/MusicBar
-@onready var sfxBar: ProgressBar = $UI/SfxBar
-@onready var fullscreenToggle: CheckButton = $UI/WindowRow/FullscreenToggle
+@onready var tabs: TabContainer = $UI/Tabs
+@onready var gameplayTab: Button = $UI/GameplayTab
+@onready var controlsTab: Button = $UI/ControlsTab
+@onready var videoTab: Button = $UI/VideoTab
+@onready var audioTab: Button = $UI/AudioTab
+@onready var shipPreview: Sprite2D = $UI/Tabs/Gameplay/List/Preview/ShipPreview
+@onready var shipPreviewBG: ColorRect = $UI/Tabs/Gameplay/List/Preview/ShipPreviewBG
+@onready var shipButton: OptionButton = $UI/Tabs/Gameplay/List/ShipButton
+@onready var musicSlider: HSlider = $UI/Tabs/Audio/List/MusicRow/MusicWrap/MusicSlider
+@onready var sfxSlider: HSlider = $UI/Tabs/Audio/List/SfxRow/SfxWrap/SfxSlider
+@onready var musicBar: ProgressBar = $UI/Tabs/Audio/List/MusicRow/MusicWrap/MusicBar
+@onready var sfxBar: ProgressBar = $UI/Tabs/Audio/List/SfxRow/SfxWrap/SfxBar
+@onready var fullscreenToggle: CheckButton = $UI/Tabs/Video/List/WindowRow/FullscreenToggle
+@onready var resetButton: Button = $UI/ResetButton
+@onready var backButton: Button = $UI/BackButton
+@onready var controls_page: ControlsState = $UI/Tabs/Controls
+
+var _tab_group := ButtonGroup.new()
+
+var start_tab: String = "Gameplay"
 
 var _window_lock: bool = false
 
@@ -17,6 +29,9 @@ var on_closed := Callable()
 
 @export var SHIP_MAX: int = 6
 @export var padding: int = 10
+const SHIP_NAMES: Array[String] = [
+	"Guardian", "Odyssey", "Beyonder", "Turncoat", "Developer", "Thankless"
+]
 
 
 const SAVE_PATH: String = "user://LeftAliened.cfg"
@@ -93,12 +108,115 @@ func _ready() -> void:
 	musicBar.value = musicSlider.value
 	sfxBar.value = sfxSlider.value
 	_sync_window_toggles()
-	updateShipButtonText() # Set the initial text
+	_fill_ship_options()
+	updateShipButtonText()
 	shipPreview.texture = Actor.load_texture(previewShip())
 	# **These lines keep the ship centered inside its background**
 	shipPreview.position = shipPreviewBG.position + shipPreviewBG.size / 2.0
-	if Main.using_controller:
+	_tab_group.allow_unpress = false
+	for b in _tab_buttons():
+		b.button_group = _tab_group
+	_bind_slider_focus(musicSlider, musicBar)
+	_bind_slider_focus(sfxSlider, sfxBar)
+	musicSlider.focus_neighbor_bottom = musicSlider.get_path_to(sfxSlider)
+	sfxSlider.focus_neighbor_top = sfxSlider.get_path_to(musicSlider)
+	sfxSlider.focus_neighbor_bottom = sfxSlider.get_path_to(backButton)
+	tabs.tab_changed.connect(_on_tab_changed)
+	open_tab(start_tab)
+	_on_tab_changed(tabs.current_tab)
+	call_deferred("_focus_current_tab")
+
+
+func _tab_buttons() -> Array[Button]:
+	return [gameplayTab, controlsTab, videoTab, audioTab]
+
+
+func _bind_slider_focus(slider: Slider, bar: ProgressBar) -> void:
+	slider.focus_mode = Control.FOCUS_ALL
+	var ring := Panel.new()
+	ring.set_anchors_preset(Control.PRESET_FULL_RECT)
+	ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ring.add_theme_stylebox_override("panel", backButton.get_theme_stylebox("focus"))
+	ring.visible = false
+	bar.add_child(ring)
+	slider.focus_entered.connect(func() -> void: ring.visible = true)
+	slider.focus_exited.connect(func() -> void: ring.visible = false)
+
+
+func set_tabs_locked(locked: bool) -> void:
+	for b in _tab_buttons():
+		b.disabled = locked
+
+
+func open_tab(tab_name: String) -> void:
+	for i in tabs.get_tab_count():
+		if tabs.get_tab_title(i) == tab_name:
+			tabs.current_tab = i
+			break
+	_sync_tab_buttons()
+
+
+func _sync_tab_buttons() -> void:
+	var title := tabs.get_tab_title(tabs.current_tab)
+	for b in _tab_buttons():
+		b.set_pressed_no_signal(b.text == title)
+
+
+func _on_tab_changed(_tab: int) -> void:
+	_sync_tab_buttons()
+
+
+func _focus_current_tab() -> void:
+	if not Main.using_controller:
+		return
+	var title := tabs.get_tab_title(tabs.current_tab)
+	if title == "Gameplay":
 		shipButton.grab_focus()
+	elif title == "Audio":
+		musicSlider.grab_focus()
+	elif title == "Video":
+		fullscreenToggle.grab_focus()
+	elif title == "Controls":
+		controls_page._focus_slot(0, 0)
+
+
+func step_tab(direction: int) -> void:
+	tabs.current_tab = wrapi(tabs.current_tab + direction, 0, tabs.get_tab_count())
+	_focus_current_tab()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if ControlsState.listening or not event.is_pressed() or event.is_echo():
+		return
+	var direction := 0
+	if InputMap.has_action("ui_tab_prev") and event.is_action("ui_tab_prev"):
+		direction = -1
+	elif InputMap.has_action("ui_tab_next") and event.is_action("ui_tab_next"):
+		direction = 1
+	if direction == 0:
+		return
+	step_tab(direction)
+	get_viewport().set_input_as_handled()
+
+
+func resetTab() -> void:
+	match tabs.get_tab_title(tabs.current_tab):
+		"Gameplay":
+			currentShipNumber = 0
+			saveShipChoice()
+			updateShipButtonText()
+			shipPreview.texture = Actor.load_texture(previewShip())
+			shipPreview.position = shipPreviewBG.position + shipPreviewBG.size / 2.0
+			_apply_ship_now()
+		"Controls":
+			controls_page.resetBindings()
+		"Video":
+			_set_window_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+		"Audio":
+			musicSlider.value = 1.0
+			sfxSlider.value = 1.0
+			setMusic(1.0)
+			setSfx(1.0)
 
 
 func setMusic(v: float) -> void:
@@ -165,12 +283,18 @@ func backToMenu() -> void:
 	queue_free()
 
 
-func cycleShipChoice() -> void:
-	currentShipNumber += 1
-	if currentShipNumber >= SHIP_MAX:
-		currentShipNumber = 0 # Wrap around to the first ship
+func _fill_ship_options() -> void:
+	shipButton.clear()
+	for i in SHIP_MAX:
+		var n := "Missingno"
+		if i < SHIP_NAMES.size():
+			n = SHIP_NAMES[i]
+		shipButton.add_item(n, i)
+
+
+func selectShip(index: int) -> void:
+	currentShipNumber = index
 	saveShipChoice()
-	updateShipButtonText()
 	shipPreview.texture = Actor.load_texture(previewShip())
 	shipPreview.position = shipPreviewBG.position + shipPreviewBG.size / 2.0
 	_apply_ship_now()
@@ -180,12 +304,10 @@ func _apply_ship_now() -> void:
 	if PlayState.current == null or PlayState.current.ship == null:
 		return
 	var player := PlayState.current.ship
-	if not player.alive or not player.visible:
-		var mid := player.get_midpoint()
-		player.apply_asset(currentShipNumber)
-		player.position = mid - player.frame_size() * 0.5
-		return
-	player.begin_swap(currentShipNumber)
+	# player.begin_swap(currentShipNumber)
+	var mid := player.get_midpoint()
+	player.apply_asset(currentShipNumber)
+	player.position = mid - player.frame_size() * 0.5
 
 
 func saveShipChoice() -> void:
@@ -194,24 +316,7 @@ func saveShipChoice() -> void:
 
 func updateShipButtonText() -> void:
 	var choice = ship_choice()
-	var shipName := "Missingno"
 	if choice != null:
-		match int(choice):
-			0:
-				shipName = "Guardian"
-			1:
-				shipName = "Odyssey"
-			2:
-				shipName = "Beyonder"
-			3:
-				shipName = "Turncoat"
-			4:
-				shipName = "Developer"
-			5:
-				shipName = "Thankless"
-			_:
-				shipName = "Missingno"
 		currentShipNumber = int(choice)
-		shipButton.text = str(currentShipNumber + 1) + ": " + shipName
-	else:
-		shipButton.text = str(currentShipNumber + 1) + ": " + shipName
+	currentShipNumber = clampi(currentShipNumber, 0, maxi(SHIP_MAX - 1, 0))
+	shipButton.select(currentShipNumber)
