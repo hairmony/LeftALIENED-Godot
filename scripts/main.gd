@@ -161,8 +161,21 @@ func _input(event: InputEvent) -> void:
 			focus_ui()
 		else:
 			get_viewport().gui_release_focus()
+	if event.is_echo() or not event.is_pressed():
 		return
-	if not using_controller or event.is_echo() or not event.is_pressed():
+	var prompt := _prompt_for_event(event)
+	if prompt != null:
+		prompt.pressed.emit()
+		get_viewport().set_input_as_handled()
+		return
+	if event.is_action("ui_cancel"):
+		var back := _top_button(self, ["BackButton", "CloseButton", "ContinueButton"])
+		if back == null or back.disabled or not back.is_visible_in_tree():
+			return
+		back.pressed.emit()
+		get_viewport().set_input_as_handled()
+		return
+	if not using_controller:
 		return
 	if event.is_action("ui_accept"):
 		var focus := get_viewport().gui_get_focus_owner()
@@ -177,21 +190,23 @@ func _input(event: InputEvent) -> void:
 			else:
 				button.pressed.emit()
 			get_viewport().set_input_as_handled()
-	elif event.is_action("ui_cancel"):
-		var back := _top_button(self, ["BackButton", "CloseButton", "ContinueButton"])
-		if back == null or back.disabled or not back.is_visible_in_tree():
-			return
-		back.pressed.emit()
-		get_viewport().set_input_as_handled()
 
 
 func focus_ui() -> void:
 	_ensure_button_focus()
 
 
+func _keeps_controller_focus(owner: Control) -> bool:
+	if owner == null or not owner.is_visible_in_tree() or owner.focus_mode == Control.FOCUS_NONE:
+		return false
+	if owner is BaseButton:
+		return not (owner as BaseButton).disabled
+	return owner is Range
+
+
 func _ensure_button_focus() -> void:
 	var owner := get_viewport().gui_get_focus_owner()
-	if owner is BaseButton and (owner as BaseButton).is_visible_in_tree() and not (owner as BaseButton).disabled and (owner as BaseButton).focus_mode != Control.FOCUS_NONE:
+	if _keeps_controller_focus(owner):
 		return
 	var button := _first_button(self)
 	if button != null:
@@ -217,6 +232,22 @@ func _is_before(a: Control, b: Control) -> bool:
 	if absf(ap.y - bp.y) > 4.0:
 		return ap.y < bp.y
 	return ap.x < bp.x
+
+
+func _prompt_for_event(event: InputEvent) -> PromptButton:
+	var best: PromptButton = null
+	for node in get_tree().get_nodes_in_group("prompt_buttons"):
+		var prompt := node as PromptButton
+		if prompt == null or prompt.prompt_action == &"":
+			continue
+		if prompt.disabled or not prompt.is_visible_in_tree():
+			continue
+		if not InputMap.has_action(prompt.prompt_action):
+			continue
+		if event.is_action(prompt.prompt_action):
+			if best == null or _is_before(prompt, best):
+				best = prompt
+	return best
 
 
 func _top_button(node: Node, names: Array) -> Button:

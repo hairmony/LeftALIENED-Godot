@@ -5,7 +5,6 @@ static var isPaused: bool = false
 
 var _armed: bool = false
 var _options: OptionsState
-var _controls: ControlsState
 
 
 func _ready() -> void:
@@ -25,9 +24,7 @@ func _process(_elapsed: float) -> void:
 		return
 	# So you can also toggle with Esc key
 	if Input.is_action_just_pressed("pause"):
-		if is_instance_valid(_controls):
-			_controls.backToMenu()
-		elif is_instance_valid(_options):
+		if is_instance_valid(_options):
 			_options.backToMenu()
 		else:
 			onContinue()
@@ -39,6 +36,14 @@ func onContinue() -> void:
 
 
 func onOptions() -> void:
+	_open_options("Gameplay")
+
+
+func onControls() -> void:
+	_open_options("Controls")
+
+
+func _open_options(tab_name: String) -> void:
 	if is_instance_valid(_options):
 		return
 	_show_pause(false)
@@ -48,42 +53,20 @@ func onOptions() -> void:
 		_show_pause(true)
 		return
 	_set_play_hud(false)
-	options.on_closed = _on_options_closed
+	options.start_tab = tab_name
+	options.on_closed = _on_options_closed.bind(tab_name == "Controls")
 	_options = options
 	$Layer.add_child(options)
 
 
-func _on_options_closed() -> void:
+func _on_options_closed(from_controls: bool = false) -> void:
 	_options = null
 	if is_inside_tree():
 		_set_play_hud(true)
 		_show_pause(true)
 		if Main.using_controller:
-			($Layer/UI/OptionsButton as Button).grab_focus()
-
-
-func onControls() -> void:
-	if is_instance_valid(_controls):
-		return
-	_show_pause(false)
-	var packed := Main.scene("res://scenes/controls.tscn")
-	var controls := packed.instantiate() as ControlsState
-	if controls == null:
-		_show_pause(true)
-		return
-	_set_play_hud(false)
-	controls.on_closed = _on_controls_closed
-	_controls = controls
-	$Layer.add_child(controls)
-
-
-func _on_controls_closed() -> void:
-	_controls = null
-	if is_inside_tree():
-		_set_play_hud(true)
-		_show_pause(true)
-		if Main.using_controller:
-			($Layer/UI/HowToPlayButton as Button).grab_focus()
+			var button_name := "HowToPlayButton" if from_controls else "OptionsButton"
+			($Layer/UI.get_node(button_name) as Button).grab_focus()
 
 
 func _show_pause(show_pause: bool) -> void:
