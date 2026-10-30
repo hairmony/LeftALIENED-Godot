@@ -38,6 +38,11 @@ var isgameOver: bool = false
 # Score tracking variables
 var asteroidHits: int = 0
 var enemyHits: int = 0
+var shotsFired: int = 0
+var superShotsFired: int = 0
+var superLevel: int = 0
+var gunsLevel: int = 0
+var droneLevel: int = 0
 var accuracyBonus: float = 0.0
 var score: float = 0.0
 
@@ -63,6 +68,11 @@ var _shotInterval: float = 3.0
 
 var boss: Boss
 var _wave_hide: float = 0.0
+var _stage_clock: float = 0.0
+var _stages: Array = []
+var _stage_mark: Dictionary = {}
+var _stats_kind: String = "wave"
+var _stats_saved: bool = false
 
 @export var bgScrollSpeed: float = 50.0
 
@@ -74,6 +84,7 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	_save_run_stats()
 	if current == self:
 		current = null
 
@@ -110,8 +121,18 @@ func create() -> void:
 	shotDelay = randf_range(-ENEMY_SHOT_DELAY, ENEMY_SHOT_DELAY) + 3.0
 	_shotInterval = shotDelay
 	_shotClock = _shotInterval
+	_stage_clock = 0.0
+	_stages.clear()
+	_stats_saved = false
+	_stats_kind = "level" if Main.endless else "wave"
+	shotsFired = 0
+	superShotsFired = 0
+	superLevel = 0
+	gunsLevel = 0
+	droneLevel = 0
 
 	begin_mode()
+	_stage_mark = _stat_totals()
 	ControllerIcons.input_type_changed.connect(func(_type, _controller): _refresh_prompt())
 	updateScoreText()
 	updateHealthText()
@@ -456,6 +477,7 @@ func collideBoss(object1: Actor, object2: Actor) -> void:
 		Main.current.play_sound("assets/sounds/DeathBoss.ogg", 0.4)
 		camera_flash(Color(1, 1, 1), 1.0)
 		the_boss.kill()
+		enemyHits += 1
 		var boss_points := 5000 * MULTIPLIER # Boss worth 5000 (?)
 		score += boss_points
 		on_score(boss_points)
@@ -492,7 +514,87 @@ func prepare_asteroid(_a: Asteroid) -> void:
 	pass
 
 
+func note_shot(n: int = 1) -> void:
+	shotsFired += n
+
+
+func note_super(n: int = 1) -> void:
+	superShotsFired += n
+
+
+func _stat_totals() -> Dictionary:
+	return {
+		"asteroids": asteroidHits,
+		"enemies": enemyHits,
+		"shots": shotsFired,
+		"supers": superShotsFired,
+		"super_level": superLevel,
+		"guns_level": gunsLevel,
+		"drone_level": droneLevel,
+	}
+
+
+func _stage_from_mark(time: float) -> Dictionary:
+	var now := _stat_totals()
+	var mark := _stage_mark
+	return {
+		"time": time,
+		"asteroids": int(now.asteroids) - int(mark.get("asteroids", 0)),
+		"enemies": int(now.enemies) - int(mark.get("enemies", 0)),
+		"shots": int(now.shots) - int(mark.get("shots", 0)),
+		"supers": int(now.supers) - int(mark.get("supers", 0)),
+		"super_level": int(now.super_level),
+		"guns_level": int(now.guns_level),
+		"drone_level": int(now.drone_level),
+	}
+
+
+func _close_stage() -> void:
+	_stages.append(_stage_from_mark(_stage_clock))
+	_stage_clock = 0.0
+	_stage_mark = _stat_totals()
+
+
+func _save_run_stats() -> void:
+	if _stats_saved:
+		return
+	_stats_saved = true
+	if _open_stage():
+		_close_stage()
+	RunStats.save_run(_stats_kind, _stages, _stat_totals())
+
+
+func clear_stats() -> void:
+	_stages.clear()
+	_stage_clock = 0.0
+	asteroidHits = 0
+	enemyHits = 0
+	shotsFired = 0
+	superShotsFired = 0
+	_stats_saved = false
+	_stage_mark = _stat_totals()
+	RunStats.clear(RunStats.mode_for_kind(_stats_kind))
+
+
+func _open_stage() -> bool:
+	var snap := _stage_from_mark(_stage_clock)
+	return float(snap.time) > 0.001 or int(snap.asteroids) > 0 or int(snap.enemies) > 0 or int(snap.shots) > 0 or int(snap.supers) > 0
+
+
+func stats_data() -> Dictionary:
+	var live: Array = _stages.duplicate(true)
+	if _open_stage():
+		live.append(_stage_from_mark(_stage_clock))
+	return {
+		"kind": _stats_kind,
+		"stages": live,
+		"totals": _stat_totals(),
+	}
+
+
 func _tick_spawns(elapsed: float) -> void:
+	if ship != null and ship.alive and not isgameOver:
+		_stage_clock += elapsed
 	if _wave_hide > 0.0:
 		_wave_hide -= elapsed
 		if _wave_hide <= 0.0:

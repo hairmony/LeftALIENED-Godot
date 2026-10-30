@@ -108,6 +108,7 @@ func on_score(points: int) -> void:
 	var goal := _xp_goal()
 	while goal > 0.0 and _xp >= goal:
 		_xp -= goal
+		_close_stage()
 		_level += 1
 		goal = _xp_goal()
 		_grant_armor()
@@ -128,6 +129,7 @@ func _pick_super() -> void:
 		ship.BULLET_PENETRATION = ENDLESS_SUPER_PEN_START
 		_apply_caps()
 		updateMultishotText()
+		superLevel += 1
 		_spent_choice()
 		return
 	if ENDLESS_SUPER_CHARGE_MIN < 0.0:
@@ -139,6 +141,7 @@ func _pick_super() -> void:
 	ship.MULTISHOT_SHOT_AMOUNT = _limit_float(ship.MULTISHOT_SHOT_AMOUNT + ENDLESS_SUPER_SHOTS_RAMP, ENDLESS_SUPER_SHOTS_CAP)
 	ship.BULLET_PENETRATION = _limit_float(ship.BULLET_PENETRATION + ENDLESS_SUPER_PEN_RAMP, ENDLESS_SUPER_PEN_CAP)
 	updateMultishotText()
+	superLevel += 1
 	_spent_choice()
 
 
@@ -150,6 +153,7 @@ func _pick_guns() -> void:
 		ship.fireRate = 1.0 / ship.PLAYER_SHOTS_PER_SEC
 	ship.gunProjectileSpeed = _limit_float(ship.gunProjectileSpeed + ENDLESS_GUNS_SPEED_RAMP, ENDLESS_GUNS_SPEED_CAP)
 	ship.superProjectileSpeed = _limit_float(ship.superProjectileSpeed + ENDLESS_GUNS_SPEED_RAMP, ENDLESS_GUNS_SPEED_CAP)
+	gunsLevel += 1
 	_spent_choice()
 
 
@@ -157,6 +161,7 @@ func _pick_drone() -> void:
 	if _pending < 1 or not _drone_open():
 		return
 	ship.droneCount = _limit_int(ship.droneCount + ENDLESS_DRONE_AMOUNT, ENDLESS_DRONE_CAP)
+	droneLevel += 1
 	_spent_choice()
 
 

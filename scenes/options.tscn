@@ -98,6 +98,7 @@ tabs_visible = false
 [node name="Gameplay" type="MarginContainer" parent="UI/Tabs" unique_id=837629810]
 layout_mode = 2
 theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
 metadata/_tab_index = 0
 
 [node name="List" type="VBoxContainer" parent="UI/Tabs/Gameplay" unique_id=59660600]
@@ -139,6 +140,7 @@ metadata/_tab_index = 1
 visible = false
 layout_mode = 2
 theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
 metadata/_tab_index = 2
 
 [node name="List" type="VBoxContainer" parent="UI/Tabs/Video" unique_id=1797548203]
@@ -176,6 +178,7 @@ vertical_alignment = 1
 [node name="Audio" type="MarginContainer" parent="UI/Tabs" unique_id=837629811]
 visible = false
 layout_mode = 2
+theme_override_constants/margin_top = 8
 metadata/_tab_index = 3
 
 [node name="List" type="VBoxContainer" parent="UI/Tabs/Audio" unique_id=2028502042]

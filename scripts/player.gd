@@ -250,6 +250,7 @@ func combat(elapsed: float) -> void:
 		p.setup(spawnX, spawnY, angleDeg)
 		play.projectiles.append(p) # Add projectile to group
 		play.actors.add_child(p)
+		play.note_shot()
 
 	# Multishot: shoot 8 projectiles in a circle
 	if superUnlocked and controlsEnabled and Input.is_action_just_pressed("super") and multishotCharge >= MULTISHOT_CHARGE_MAX:
@@ -271,6 +272,7 @@ func combat(elapsed: float) -> void:
 				play.specialProjectiles.append(shot) # Add projectile to group
 				play.actors.add_child(shot)
 				angleIncrement += 360.0 / float(shot_count)
+			play.note_super(shot_count)
 			play.updateMultishotText()
 
 	var dodge_released: bool = controlsEnabled and Input.is_action_just_released("dodge")

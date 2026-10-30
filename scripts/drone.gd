@@ -132,6 +132,7 @@ func _shoot(ship: Player, elapsed: float, play: PlayState, target: Actor) -> voi
 	shot.setup(mid.x + cos(angle_rad) * 8.0, mid.y + sin(angle_rad) * 8.0, angle_deg)
 	play.projectiles.append(shot)
 	play.actors.add_child(shot)
+	play.note_shot()
 	Main.current.play_sound("assets/sounds/ShootPlayer.ogg", 0.25)
 
 
