@@ -29,7 +29,7 @@ func _process(_elapsed: float) -> void:
 			_options.backToMenu()
 		elif is_instance_valid(_stats):
 			_stats.backToMenu()
-		else:
+		elif not Input.is_action_just_pressed("ui_cancel"):
 			onContinue()
 
 

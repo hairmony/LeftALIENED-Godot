@@ -13,61 +13,83 @@ fire_threshold = 0.01
 
 [node name="UI" type="Control" parent="." unique_id=1817842403]
 layout_mode = 3
-anchors_preset = 0
-offset_right = 640.0
-offset_bottom = 360.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 
 [node name="MoveZone" type="Control" parent="UI" unique_id=1538939035]
-anchors_preset = 0
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
 offset_left = 5.0
-offset_top = 107.0
+offset_top = -253.0
 offset_right = 215.0
-offset_bottom = 327.0
+offset_bottom = -33.0
+grow_vertical = 0
 script = ExtResource("2_stick")
+radius = 18.75
 
 [node name="AimZone" type="Control" parent="UI" unique_id=277350056]
-anchors_preset = 0
-offset_left = 425.0
-offset_top = 107.0
-offset_right = 635.0
-offset_bottom = 327.0
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -215.0
+offset_top = -253.0
+offset_right = -5.0
+offset_bottom = -33.0
+grow_horizontal = 0
+grow_vertical = 0
 script = ExtResource("2_stick")
+radius = 18.75
 
-[node name="Actions" type="HBoxContainer" parent="UI"]
-layout_mode = 0
-offset_left = 189.0
-offset_top = 300.0
-offset_right = 451.0
-offset_bottom = 326.0
-theme_override_constants/separation = 210
-alignment = 1
+[node name="Actions" type="Control" parent="UI" unique_id=1847293847]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -131.0
+offset_top = -60.0
+offset_right = 131.0
+offset_bottom = -34.0
+grow_horizontal = 2
 mouse_filter = 2
 
 [node name="DodgeButton" parent="UI/Actions" unique_id=694560326 instance=ExtResource("3_btn")]
-custom_minimum_size = Vector2(26, 26)
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 0
+layout_mode = 0
+offset_right = 26.0
+offset_bottom = 26.0
 text = ""
 icon = ExtResource("4_dodge")
 icon_alignment = 1
 
 [node name="SuperButton" parent="UI/Actions" unique_id=93480077 instance=ExtResource("3_btn")]
-custom_minimum_size = Vector2(26, 26)
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 0
+layout_mode = 0
+offset_left = 236.0
+offset_right = 262.0
+offset_bottom = 26.0
 text = ""
 icon = ExtResource("5_super")
 icon_alignment = 1
 
 [node name="PauseButton" parent="UI" unique_id=368033615 instance=ExtResource("3_btn")]
-layout_mode = 0
-offset_left = 510.0
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -130.0
 offset_top = 16.0
-offset_right = 620.0
+offset_right = -20.0
 offset_bottom = 44.0
+grow_horizontal = 0
 text = "Pause"
 
 [connection signal="button_down" from="UI/Actions/DodgeButton" to="." method="_on_dodge_down"]
