@@ -26,7 +26,7 @@ func _process(_elapsed: float) -> void:
 	if Input.is_action_just_pressed("pause"):
 		if is_instance_valid(_options):
 			_options.backToMenu()
-		else:
+		elif not Input.is_action_just_pressed("ui_cancel"):
 			onContinue()
 
 

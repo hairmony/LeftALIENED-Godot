@@ -81,7 +81,9 @@ func update(elapsed: float) -> void:
 	if not exists:
 		return
 
-	var move := _stick_vector("move_left", "move_right", "move_up", "move_down")
+	var move := TouchControls.move_vector
+	if move == Vector2.ZERO:
+		move = _stick_vector("move_left", "move_right", "move_up", "move_down")
 	if move == Vector2.ZERO:
 		move = Vector2(Input.get_axis("move_left", "move_right"), Input.get_axis("move_up", "move_down"))
 	var moveX: float = move.x
@@ -128,17 +130,6 @@ func _pads() -> Array:
 	if Main.pad >= 0:
 		return [Main.pad]
 	return Input.get_connected_joypads()
-
-
-func _aim_stick_length() -> float:
-	var best := TouchControls.aim_vector.length()
-	for pad in _pads():
-		var aim := Vector2(
-			_joy_action_axis(pad, "aim_right") - _joy_action_axis(pad, "aim_left"),
-			_joy_action_axis(pad, "aim_down") - _joy_action_axis(pad, "aim_up")
-		)
-		best = maxf(best, aim.length())
-	return best
 
 
 func _stick_vector(left: String, right: String, up: String, down: String) -> Vector2:
@@ -239,7 +230,7 @@ func combat(elapsed: float) -> void:
 	var play := PlayState.current
 	fireTimer += elapsed
 	# Default: shoot 1 projectile with LMB or hold LMB
-	var stick_firing := _aim_stick_length() >= TouchControls.shoot_at
+	var stick_firing: bool = TouchControls.aiming
 	var finger_down := TouchControls.touching > 0
 	var shoot_held := Input.is_action_pressed("shoot") and not finger_down
 	var shoot_tap := Input.is_action_just_pressed("shoot") and not finger_down

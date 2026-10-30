@@ -9,11 +9,13 @@ static var current: Main
 static var bg_y: float = 0.0
 static var endless: bool = false
 static var using_controller: bool = false
+static var using_touch: bool = false
 static var pad: int = -1
 
 @export var mouse_idle_hide_seconds: float = 2.0
 var _mouse_idle: float = 0.0
 var _nav_lock_until: int = 0
+var _touch_until: int = 0
 var _pad: int = -1
 
 var music_volume: float = 1.0
@@ -56,6 +58,7 @@ func _ready() -> void:
 	_bind_ui_joypad("ui_cancel", JOY_BUTTON_B)
 	_choose_pad()
 	Input.joy_connection_changed.connect(func(_device, _connected): _choose_pad())
+	using_touch = OS.has_feature("mobile")
 	ControlsState.load_bindings()
 	change_state("menu")
 
@@ -150,17 +153,34 @@ func _input(event: InputEvent) -> void:
 	if ControlsState.listening:
 		return
 	var was_controller := using_controller
-	if event is InputEventJoypadButton and event.pressed:
+	var was_touch := using_touch
+	if event is InputEventScreenTouch or event is InputEventScreenDrag:
+		using_controller = false
+		using_touch = true
+		_touch_until = Time.get_ticks_msec() + 300
+	elif event is InputEventJoypadButton and event.pressed:
 		using_controller = true
+		using_touch = false
 	elif event is InputEventJoypadMotion and absf(event.axis_value) >= 0.5:
 		using_controller = true
-	elif (event is InputEventKey and event.pressed and not event.is_echo()) or (event is InputEventMouseButton and event.pressed) or (event is InputEventMouseMotion and event.relative.length() > 0.0):
+		using_touch = false
+	elif event is InputEventKey and event.pressed and not event.is_echo():
 		using_controller = false
+		using_touch = false
+	elif (event is InputEventMouseButton and event.pressed) or (event is InputEventMouseMotion and event.relative.length() > 0.0):
+		if event.device < 0 or Time.get_ticks_msec() < _touch_until:
+			using_controller = false
+			using_touch = true
+		else:
+			using_controller = false
+			using_touch = false
 	if using_controller != was_controller:
 		if using_controller:
 			focus_ui()
 		else:
 			get_viewport().gui_release_focus()
+	if using_touch != was_touch:
+		ControllerIcons.refresh()
 	if event.is_echo() or not event.is_pressed():
 		return
 	var prompt := _prompt_for_event(event)
@@ -245,8 +265,7 @@ func _prompt_for_event(event: InputEvent) -> PromptButton:
 		if not InputMap.has_action(prompt.prompt_action):
 			continue
 		if event.is_action(prompt.prompt_action):
-			if best == null or _is_before(prompt, best):
-				best = prompt
+			best = prompt
 	return best
 
 
