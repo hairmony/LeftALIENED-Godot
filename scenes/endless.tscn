@@ -51,9 +51,6 @@ ENDLESS_ASTEROID_DRIFT = 50.0
 MULTIPLIER_MAX = 5
 MULTIPLIER_DECAY = 0.65
 
-[node name="TouchControls" parent="." index="3"]
-fire_threshold = 0.75
-
 [node name="XpBar" type="ColorRect" parent="HUD/UI" parent_id_path=PackedInt32Array(1735770479) index="8" unique_id=1530735562]
 layout_mode = 0
 offset_left = 220.0

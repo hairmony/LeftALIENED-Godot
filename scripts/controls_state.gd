@@ -501,6 +501,8 @@ static func icon_for(ev: InputEvent) -> Texture2D:
 
 
 static func prompt_text(action: String, suffix: String) -> String:
+	if Main.using_touch:
+		return suffix
 	var want_pad := ControllerIcons.get_last_input_type() == ControllerIcons.InputType.CONTROLLER
 	var ev := _first_event(action, want_pad)
 	if ev == null:

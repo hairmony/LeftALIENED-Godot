@@ -18,7 +18,7 @@ func _ready() -> void:
 
 func _refresh_prompt() -> void:
 	var tex: Texture2D = null
-	if prompt_action != &"" and InputMap.has_action(prompt_action):
+	if not Main.using_touch and prompt_action != &"" and InputMap.has_action(prompt_action):
 		var pad := ControllerIcons.get_last_input_type() == ControllerIcons.InputType.CONTROLLER
 		var type := ControllerIcons.InputType.CONTROLLER if pad else ControllerIcons.InputType.KEYBOARD_MOUSE
 		if _has_events(pad):
