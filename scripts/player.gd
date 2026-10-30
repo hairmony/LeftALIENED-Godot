@@ -146,6 +146,17 @@ func _stick_vector(left: String, right: String, up: String, down: String) -> Vec
 	return best.limit_length(1.0)
 
 
+func _aim_stick_length() -> float:
+	var best := 0.0
+	for pad in _pads():
+		var joy := Vector2(
+			_joy_action_axis(pad, "aim_right") - _joy_action_axis(pad, "aim_left"),
+			_joy_action_axis(pad, "aim_down") - _joy_action_axis(pad, "aim_up")
+		)
+		best = maxf(best, joy.length())
+	return best
+
+
 func _joy_action_axis(pad: int, action: String) -> float:
 	for ev in InputMap.action_get_events(action):
 		if ev is InputEventJoypadMotion:
@@ -230,7 +241,8 @@ func combat(elapsed: float) -> void:
 	var play := PlayState.current
 	fireTimer += elapsed
 	# Default: shoot 1 projectile with LMB or hold LMB
-	var stick_firing: bool = TouchControls.aiming
+	var pad_firing := _aim_stick_length() >= TouchControls.shoot_at
+	var stick_firing: bool = TouchControls.aiming or pad_firing
 	var finger_down := TouchControls.touching > 0
 	var shoot_held := Input.is_action_pressed("shoot") and not finger_down
 	var shoot_tap := Input.is_action_just_pressed("shoot") and not finger_down
