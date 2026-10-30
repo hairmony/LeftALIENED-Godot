@@ -1,0 +1,114 @@
+[gd_scene format=3 uid="uid://1xvfei0vk1vs"]
+
+[ext_resource type="Script" path="res://scripts/statistics_state.gd" id="1_stats"]
+[ext_resource type="Theme" uid="uid://r4ha0qas57o7" path="res://assets/ui/button_theme.tres" id="2_theme"]
+[ext_resource type="PackedScene" uid="uid://jc5fdv3ufugl" path="res://scenes/ui_button.tscn" id="3_btn"]
+[ext_resource type="Script" uid="uid://c77s65yrqn41r" path="res://scripts/prompt_button.gd" id="4_prompt"]
+[ext_resource type="FontFile" uid="uid://d2gnbq5y7f3pn" path="res://assets/text/fonts/Ithaca.ttf" id="5_font"]
+[ext_resource type="Script" path="res://scripts/prompt_icon.gd" id="6_icon"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_tree"]
+
+[node name="Statistics" type="Node2D"]
+script = ExtResource("1_stats")
+
+[node name="UI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 640.0
+offset_bottom = 360.0
+
+[node name="TabPrev" type="TextureRect" parent="UI"]
+layout_mode = 0
+offset_left = 25.0
+offset_top = 20.0
+offset_right = 45.0
+offset_bottom = 40.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("6_icon")
+prompt_action = &"ui_tab_prev"
+
+[node name="ClassicTab" parent="UI" instance=ExtResource("3_btn")]
+layout_mode = 0
+offset_left = 49.0
+offset_top = 16.0
+offset_right = 159.0
+offset_bottom = 44.0
+toggle_mode = true
+button_pressed = true
+text = "Classic"
+
+[node name="EndlessTab" parent="UI" instance=ExtResource("3_btn")]
+layout_mode = 0
+offset_left = 159.0
+offset_top = 16.0
+offset_right = 269.0
+offset_bottom = 44.0
+toggle_mode = true
+text = "Endless"
+
+[node name="TabNext" type="TextureRect" parent="UI"]
+layout_mode = 0
+offset_left = 273.0
+offset_top = 20.0
+offset_right = 293.0
+offset_bottom = 40.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("6_icon")
+prompt_action = &"ui_tab_next"
+
+[node name="Window" type="PanelContainer" parent="UI"]
+clip_contents = true
+layout_mode = 0
+offset_left = 25.0
+offset_top = 44.0
+offset_right = 615.0
+offset_bottom = 300.0
+theme = ExtResource("2_theme")
+
+[node name="Margin" type="MarginContainer" parent="UI/Window"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="StatsTree" type="Tree" parent="UI/Window/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+theme_override_fonts/font = ExtResource("5_font")
+theme_override_font_sizes/font_size = 16
+theme_override_styles/panel = SubResource("StyleBoxEmpty_tree")
+hide_root = true
+columns = 1
+scroll_horizontal_enabled = false
+
+[node name="BackButton" parent="UI" instance=ExtResource("3_btn")]
+layout_mode = 0
+offset_left = 25.0
+offset_top = 308.0
+offset_right = 135.0
+offset_bottom = 336.0
+text = "Back"
+script = ExtResource("4_prompt")
+
+[node name="ClearButton" parent="UI" instance=ExtResource("3_btn")]
+layout_mode = 0
+offset_left = 139.0
+offset_top = 308.0
+offset_right = 249.0
+offset_bottom = 336.0
+text = "Clear"
+script = ExtResource("4_prompt")
+prompt_action = &"ui_reset"
+
+[connection signal="pressed" from="UI/ClassicTab" to="." method="open_tab" binds= ["Classic"]]
+[connection signal="pressed" from="UI/EndlessTab" to="." method="open_tab" binds= ["Endless"]]
+[connection signal="pressed" from="UI/BackButton" to="." method="backToMenu"]
+[connection signal="pressed" from="UI/ClearButton" to="." method="clearStats"]

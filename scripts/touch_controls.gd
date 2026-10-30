@@ -13,7 +13,7 @@ var _touches: Dictionary = {}
 
 @onready var move_stick: Control = $UI/MoveZone
 @onready var aim_stick: Control = $UI/AimZone
-@onready var super_button: Button = $UI/SuperButton
+@onready var super_button: Button = $UI/Actions/SuperButton
 
 
 func _ready() -> void:

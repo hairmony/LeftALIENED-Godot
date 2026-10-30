@@ -27,8 +27,8 @@ var _focus_lock_until: int = 0
 var _stick_armed: bool = false
 var _ui_button: PackedScene
 
-@onready var rows: VBoxContainer = $Scroll/Rows
-@onready var scroll: ScrollContainer = $Scroll
+@onready var rows: VBoxContainer = $Margin/Scroll/Rows
+@onready var scroll: ScrollContainer = $Margin/Scroll
 
 
 func _back_button() -> Button:

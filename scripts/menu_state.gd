@@ -2,7 +2,6 @@ class_name MenuState
 extends Node2D
 
 
-@onready var rulesText: Label = $UI/RulesText
 @onready var creditsPanel: ColorRect = $UI/CreditsPanel
 @onready var creditsText: Label = $UI/CreditsClip/CreditsText
 @onready var playButton: Button = $UI/PlayButton # Position it vertically in the middle
@@ -30,6 +29,7 @@ var _buttons: Array[Button] = []
 func _ready() -> void:
 	Main.current.play_music("assets/music/MenuMusic.mp3", 0.25)
 	_buttons = [playButton, classicButton, endlessButton, optionsButton, rulesButton, creditsButton, closeButton]
+	RunStats.load_run()
 	_place_backdrop()
 
 
@@ -127,14 +127,22 @@ func _show_menu(show_menu: bool) -> void:
 		if Main.using_controller:
 			optionsButton.grab_focus()
 	if not show_menu:
-		rulesText.visible = false
 		creditsText.visible = false
 		creditsPanel.visible = false
 		creditsActive = false
 
 
-func controlsMenu() -> void:
-	_open_options("Controls")
+func showStats() -> void:
+	if _leaving:
+		return
+	_show_menu(false)
+	var stats := Main.scene("res://scenes/statistics.tscn").instantiate() as StatisticsState
+	if stats == null:
+		_show_menu(true)
+		return
+	stats.start_tab = RunStats.tab_for_mode(RunStats.last)
+	stats.on_closed = _on_options_closed.bind(true)
+	add_child(stats)
 
 
 func showCredits() -> void:

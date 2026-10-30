@@ -73,6 +73,8 @@ func debug_skip() -> void:
 func startWave() -> void:
 	if isgameOver:
 		return
+	if currentWave >= 0:
+		_close_stage()
 	currentWave += 1
 	isSpawning = true
 	# Flash wave text on screen

@@ -34,22 +34,30 @@ offset_right = 635.0
 offset_bottom = 327.0
 script = ExtResource("2_stick")
 
-[node name="DodgeButton" parent="UI" unique_id=694560326 instance=ExtResource("3_btn")]
+[node name="Actions" type="HBoxContainer" parent="UI"]
 layout_mode = 0
 offset_left = 189.0
 offset_top = 300.0
-offset_right = 215.0
+offset_right = 451.0
 offset_bottom = 326.0
+theme_override_constants/separation = 210
+alignment = 1
+mouse_filter = 2
+
+[node name="DodgeButton" parent="UI/Actions" unique_id=694560326 instance=ExtResource("3_btn")]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
 text = ""
 icon = ExtResource("4_dodge")
 icon_alignment = 1
 
-[node name="SuperButton" parent="UI" unique_id=93480077 instance=ExtResource("3_btn")]
-layout_mode = 0
-offset_left = 425.0
-offset_top = 300.0
-offset_right = 451.0
-offset_bottom = 326.0
+[node name="SuperButton" parent="UI/Actions" unique_id=93480077 instance=ExtResource("3_btn")]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
 text = ""
 icon = ExtResource("5_super")
 icon_alignment = 1
@@ -62,7 +70,7 @@ offset_right = 620.0
 offset_bottom = 44.0
 text = "Pause"
 
-[connection signal="button_down" from="UI/DodgeButton" to="." method="_on_dodge_down"]
-[connection signal="button_up" from="UI/DodgeButton" to="." method="_on_dodge_up"]
-[connection signal="button_down" from="UI/SuperButton" to="." method="_on_super_down"]
+[connection signal="button_down" from="UI/Actions/DodgeButton" to="." method="_on_dodge_down"]
+[connection signal="button_up" from="UI/Actions/DodgeButton" to="." method="_on_dodge_up"]
+[connection signal="button_down" from="UI/Actions/SuperButton" to="." method="_on_super_down"]
 [connection signal="button_down" from="UI/PauseButton" to="." method="_on_pause_down"]

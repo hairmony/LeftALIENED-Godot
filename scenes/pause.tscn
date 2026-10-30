@@ -63,42 +63,7 @@ offset_left = 260.0
 offset_top = 276.0
 offset_right = 380.0
 offset_bottom = 304.0
-text = "Controls"
-
-[node name="RulesPanel" type="ColorRect" parent="Layer/UI" unique_id=1847291642]
-visible = false
-layout_mode = 0
-offset_left = 384.0
-offset_right = 640.0
-offset_bottom = 360.0
-mouse_filter = 2
-color = Color(0, 0, 0, 0.5)
-
-[node name="RulesText" type="Label" parent="Layer/UI" unique_id=1847291643]
-visible = false
-layout_mode = 0
-offset_left = 394.0
-offset_top = 40.0
-offset_right = 630.0
-offset_bottom = 340.0
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 16
-text = "HOW TO PLAY:
-
-1. WASD to move
-2. LMB to shoot
-3. SHIFT/RMB to dodge
-4. SPACE to use SUPER
-5. Hit asteroids/enemies to charge SUPER
-6. Destroy the asteroid shower
-7. Clear the enemy drones to advance
-8. Defeat ENEMY LEADERs to gain HP
-9. Defeat all ENEMY LEADERS to WIN!
-10. R to restart
-11. ESC to pause
-
-Press 'How To Play' to close panel."
-autowrap_mode = 3
+text = "Statistics"
 
 [node name="ExitButton" parent="Layer/UI" unique_id=888310570 instance=ExtResource("2_btn")]
 layout_mode = 0
@@ -111,5 +76,5 @@ text = "Exit"
 [connection signal="pressed" from="Layer/UI/ContinueButton" to="." method="onContinue"]
 [connection signal="pressed" from="Layer/UI/RestartButton" to="." method="onRestart"]
 [connection signal="pressed" from="Layer/UI/OptionsButton" to="." method="onOptions"]
-[connection signal="pressed" from="Layer/UI/HowToPlayButton" to="." method="onControls"]
+[connection signal="pressed" from="Layer/UI/HowToPlayButton" to="." method="onStats"]
 [connection signal="pressed" from="Layer/UI/ExitButton" to="." method="onExit"]
