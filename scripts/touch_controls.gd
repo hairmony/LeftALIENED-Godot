@@ -1,7 +1,9 @@
 class_name TouchControls
 extends CanvasLayer
 
+static var move_vector: Vector2 = Vector2.ZERO
 static var aim_vector: Vector2 = Vector2.ZERO
+static var aiming: bool = false
 static var touching: int = 0
 static var deadzone: float = 0.08
 static var shoot_at: float = 0.75
@@ -13,7 +15,7 @@ var _touches: Dictionary = {}
 
 @onready var move_stick: Control = $UI/MoveZone
 @onready var aim_stick: Control = $UI/AimZone
-@onready var super_button: Button = $UI/SuperButton
+@onready var super_button: Button = $UI/Actions/SuperButton
 
 
 func _ready() -> void:
@@ -42,14 +44,24 @@ func _exit_tree() -> void:
 
 
 func _apply_move(vector: Vector2) -> void:
+	vector = _digital(vector)
+	move_vector = vector
 	_axis("move_left", "move_right", vector.x)
 	_axis("move_up", "move_down", vector.y)
 
 
 func _apply_aim(vector: Vector2) -> void:
+	aiming = aim_stick.dragging
+	vector = _digital(vector)
 	aim_vector = vector
 	_axis("aim_left", "aim_right", vector.x)
 	_axis("aim_up", "aim_down", vector.y)
+
+
+func _digital(vector: Vector2) -> Vector2:
+	if vector.length() < stick_deadzone:
+		return Vector2.ZERO
+	return vector.normalized()
 
 
 func _input(event: InputEvent) -> void:
@@ -59,8 +71,6 @@ func _input(event: InputEvent) -> void:
 		else:
 			_touches.erase(event.index)
 		touching = _touches.size()
-		if aim_vector.length() < fire_threshold:
-			Input.action_release("shoot")
 
 
 func _update_super() -> void:
@@ -92,17 +102,19 @@ func _on_pause_down() -> void:
 func _axis(negative: String, positive: String, value: float) -> void:
 	if value <= -stick_deadzone:
 		Input.action_release(positive)
-		Input.action_press(negative, -value)
+		Input.action_press(negative, 1.0)
 	elif value >= stick_deadzone:
 		Input.action_release(negative)
-		Input.action_press(positive, value)
+		Input.action_press(positive, 1.0)
 	else:
 		Input.action_release(negative)
 		Input.action_release(positive)
 
 
 func _release_all() -> void:
+	move_vector = Vector2.ZERO
 	aim_vector = Vector2.ZERO
+	aiming = false
 	_touches.clear()
 	touching = 0
 	for action in ["move_left", "move_right", "move_up", "move_down", "aim_left", "aim_right", "aim_up", "aim_down", "dodge", "super", "pause"]:

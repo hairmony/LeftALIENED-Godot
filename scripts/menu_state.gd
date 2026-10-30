@@ -2,7 +2,6 @@ class_name MenuState
 extends Node2D
 
 
-@onready var rulesText: Label = $UI/RulesText
 @onready var creditsPanel: ColorRect = $UI/CreditsPanel
 @onready var creditsText: Label = $UI/CreditsClip/CreditsText
 @onready var playButton: Button = $UI/PlayButton # Position it vertically in the middle
@@ -30,6 +29,7 @@ var _buttons: Array[Button] = []
 func _ready() -> void:
 	Main.current.play_music("assets/music/MenuMusic.mp3", 0.25)
 	_buttons = [playButton, classicButton, endlessButton, optionsButton, rulesButton, creditsButton, closeButton]
+	RunStats.load_run()
 	_place_backdrop()
 
 
@@ -94,6 +94,10 @@ func _show_modes() -> void:
 
 #Options menu
 func optionsMenu() -> void:
+	_open_options("Gameplay")
+
+
+func _open_options(tab_name: String) -> void:
 	if _leaving:
 		return
 	_show_menu(false)
@@ -101,13 +105,16 @@ func optionsMenu() -> void:
 	if options == null:
 		_show_menu(true)
 		return
-	options.on_closed = _on_options_closed
+	options.start_tab = tab_name
+	options.on_closed = _on_options_closed.bind(tab_name == "Controls")
 	add_child(options)
 
 
-func _on_options_closed() -> void:
+func _on_options_closed(from_controls: bool = false) -> void:
 	if is_inside_tree():
 		_show_menu(true)
+		if Main.using_controller and from_controls:
+			rulesButton.grab_focus()
 
 
 func _show_menu(show_menu: bool) -> void:
@@ -120,26 +127,22 @@ func _show_menu(show_menu: bool) -> void:
 		if Main.using_controller:
 			optionsButton.grab_focus()
 	if not show_menu:
-		rulesText.visible = false
 		creditsText.visible = false
 		creditsPanel.visible = false
 		creditsActive = false
 
 
-func controlsMenu() -> void:
+func showStats() -> void:
 	if _leaving:
 		return
 	_show_menu(false)
-	var controls := Main.scene("res://scenes/controls.tscn").instantiate() as ControlsState
-	controls.on_closed = _on_controls_closed
-	add_child(controls)
-
-
-func _on_controls_closed() -> void:
-	if is_inside_tree():
+	var stats := Main.scene("res://scenes/statistics.tscn").instantiate() as StatisticsState
+	if stats == null:
 		_show_menu(true)
-		if Main.using_controller:
-			rulesButton.grab_focus()
+		return
+	stats.start_tab = RunStats.tab_for_mode(RunStats.last)
+	stats.on_closed = _on_options_closed.bind(true)
+	add_child(stats)
 
 
 func showCredits() -> void:

@@ -5,6 +5,7 @@
 
 [node name="DroneProjectile" type="Node2D" unique_id=303395245]
 script = ExtResource("1_script")
+speed = 675.0
 
 [node name="Sprite" type="Sprite2D" parent="." unique_id=527403073]
 texture_filter = 1

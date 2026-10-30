@@ -81,7 +81,9 @@ func update(elapsed: float) -> void:
 	if not exists:
 		return
 
-	var move := _stick_vector("move_left", "move_right", "move_up", "move_down")
+	var move := TouchControls.move_vector
+	if move == Vector2.ZERO:
+		move = _stick_vector("move_left", "move_right", "move_up", "move_down")
 	if move == Vector2.ZERO:
 		move = Vector2(Input.get_axis("move_left", "move_right"), Input.get_axis("move_up", "move_down"))
 	var moveX: float = move.x
@@ -130,17 +132,6 @@ func _pads() -> Array:
 	return Input.get_connected_joypads()
 
 
-func _aim_stick_length() -> float:
-	var best := TouchControls.aim_vector.length()
-	for pad in _pads():
-		var aim := Vector2(
-			_joy_action_axis(pad, "aim_right") - _joy_action_axis(pad, "aim_left"),
-			_joy_action_axis(pad, "aim_down") - _joy_action_axis(pad, "aim_up")
-		)
-		best = maxf(best, aim.length())
-	return best
-
-
 func _stick_vector(left: String, right: String, up: String, down: String) -> Vector2:
 	var best := Vector2.ZERO
 	for pad in _pads():
@@ -153,6 +144,17 @@ func _stick_vector(left: String, right: String, up: String, down: String) -> Vec
 	if best.length() < 0.15:
 		return Vector2.ZERO
 	return best.limit_length(1.0)
+
+
+func _aim_stick_length() -> float:
+	var best := 0.0
+	for pad in _pads():
+		var joy := Vector2(
+			_joy_action_axis(pad, "aim_right") - _joy_action_axis(pad, "aim_left"),
+			_joy_action_axis(pad, "aim_down") - _joy_action_axis(pad, "aim_up")
+		)
+		best = maxf(best, joy.length())
+	return best
 
 
 func _joy_action_axis(pad: int, action: String) -> float:
@@ -239,7 +241,8 @@ func combat(elapsed: float) -> void:
 	var play := PlayState.current
 	fireTimer += elapsed
 	# Default: shoot 1 projectile with LMB or hold LMB
-	var stick_firing := _aim_stick_length() >= TouchControls.shoot_at
+	var pad_firing := _aim_stick_length() >= TouchControls.shoot_at
+	var stick_firing: bool = TouchControls.aiming or pad_firing
 	var finger_down := TouchControls.touching > 0
 	var shoot_held := Input.is_action_pressed("shoot") and not finger_down
 	var shoot_tap := Input.is_action_just_pressed("shoot") and not finger_down
@@ -259,6 +262,7 @@ func combat(elapsed: float) -> void:
 		p.setup(spawnX, spawnY, angleDeg)
 		play.projectiles.append(p) # Add projectile to group
 		play.actors.add_child(p)
+		play.note_shot()
 
 	# Multishot: shoot 8 projectiles in a circle
 	if superUnlocked and controlsEnabled and Input.is_action_just_pressed("super") and multishotCharge >= MULTISHOT_CHARGE_MAX:
@@ -280,6 +284,7 @@ func combat(elapsed: float) -> void:
 				play.specialProjectiles.append(shot) # Add projectile to group
 				play.actors.add_child(shot)
 				angleIncrement += 360.0 / float(shot_count)
+			play.note_super(shot_count)
 			play.updateMultishotText()
 
 	var dodge_released: bool = controlsEnabled and Input.is_action_just_released("dodge")
@@ -300,6 +305,7 @@ func update_drones(elapsed: float) -> void:
 		for d in _drones:
 			(d as Drone).fly_away(self, elapsed)
 		return
+	var target_pool := Drone.build_target_pool(PlayState.current, get_midpoint())
 	for d in _drones:
 		var follower := d as Drone
 		if follower.departing or not follower.exists:
@@ -309,6 +315,8 @@ func update_drones(elapsed: float) -> void:
 		follower.alive = true
 		follower.exists = true
 		follower.slotCount = droneCount
+		follower.target_slot = follower.slot
+		follower.target_pool = target_pool
 		follower.follow(self, elapsed)
 		follower.visible = true
 
@@ -330,6 +338,7 @@ func _ensure_drones() -> void:
 		var follower := _drones[i] as Drone
 		follower.slot = i
 		follower.slotCount = droneCount
+		follower.target_slot = i
 
 
 func drones_departing() -> bool:

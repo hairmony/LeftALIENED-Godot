@@ -5,7 +5,7 @@ static var isPaused: bool = false
 
 var _armed: bool = false
 var _options: OptionsState
-var _controls: ControlsState
+var _stats: StatisticsState
 
 
 func _ready() -> void:
@@ -25,11 +25,11 @@ func _process(_elapsed: float) -> void:
 		return
 	# So you can also toggle with Esc key
 	if Input.is_action_just_pressed("pause"):
-		if is_instance_valid(_controls):
-			_controls.backToMenu()
-		elif is_instance_valid(_options):
+		if is_instance_valid(_options):
 			_options.backToMenu()
-		else:
+		elif is_instance_valid(_stats):
+			_stats.backToMenu()
+		elif not Input.is_action_just_pressed("ui_cancel"):
 			onContinue()
 
 
@@ -39,6 +39,27 @@ func onContinue() -> void:
 
 
 func onOptions() -> void:
+	_open_options("Gameplay")
+
+
+func onStats() -> void:
+	if is_instance_valid(_options) or is_instance_valid(_stats):
+		return
+	_show_pause(false)
+	_set_play_hud(false)
+	var packed := Main.scene("res://scenes/statistics.tscn")
+	var stats := packed.instantiate() as StatisticsState
+	if stats == null:
+		_show_pause(true)
+		_set_play_hud(true)
+		return
+	stats.start_tab = "Endless" if Main.endless else "Classic"
+	stats.on_closed = _on_stats_closed
+	_stats = stats
+	$Layer.add_child(stats)
+
+
+func _open_options(tab_name: String) -> void:
 	if is_instance_valid(_options):
 		return
 	_show_pause(false)
@@ -48,37 +69,24 @@ func onOptions() -> void:
 		_show_pause(true)
 		return
 	_set_play_hud(false)
-	options.on_closed = _on_options_closed
+	options.start_tab = tab_name
+	options.on_closed = _on_options_closed.bind(tab_name == "Controls")
 	_options = options
 	$Layer.add_child(options)
 
 
-func _on_options_closed() -> void:
+func _on_options_closed(from_controls: bool = false) -> void:
 	_options = null
 	if is_inside_tree():
 		_set_play_hud(true)
 		_show_pause(true)
 		if Main.using_controller:
-			($Layer/UI/OptionsButton as Button).grab_focus()
+			var button_name := "HowToPlayButton" if from_controls else "OptionsButton"
+			($Layer/UI.get_node(button_name) as Button).grab_focus()
 
 
-func onControls() -> void:
-	if is_instance_valid(_controls):
-		return
-	_show_pause(false)
-	var packed := Main.scene("res://scenes/controls.tscn")
-	var controls := packed.instantiate() as ControlsState
-	if controls == null:
-		_show_pause(true)
-		return
-	_set_play_hud(false)
-	controls.on_closed = _on_controls_closed
-	_controls = controls
-	$Layer.add_child(controls)
-
-
-func _on_controls_closed() -> void:
-	_controls = null
+func _on_stats_closed() -> void:
+	_stats = null
 	if is_inside_tree():
 		_set_play_hud(true)
 		_show_pause(true)
@@ -87,7 +95,11 @@ func _on_controls_closed() -> void:
 
 
 func _show_pause(show_pause: bool) -> void:
-	$Layer/UI.visible = show_pause
+	for child in $Layer/UI.get_children():
+		if child.name == "Dim":
+			child.visible = true
+			continue
+		child.visible = show_pause
 
 
 func _set_play_hud(show_hud: bool) -> void:

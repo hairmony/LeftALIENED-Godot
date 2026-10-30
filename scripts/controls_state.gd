@@ -1,5 +1,5 @@
 class_name ControlsState
-extends Node2D
+extends Control
 
 const SAVE_PATH: String = "user://LeftAliened.cfg"
 const ACTIONS: Array[String] = [
@@ -27,8 +27,26 @@ var _focus_lock_until: int = 0
 var _stick_armed: bool = false
 var _ui_button: PackedScene
 
-@onready var keyboard_rows: VBoxContainer = $UI/Tabs/Keyboard/Rows
-@onready var gamepad_rows: VBoxContainer = $UI/Tabs/Gamepad/Rows
+@onready var rows: VBoxContainer = $Margin/Scroll/Rows
+@onready var scroll: ScrollContainer = $Margin/Scroll
+
+
+func _back_button() -> Button:
+	var ui := get_parent()
+	if ui != null:
+		ui = ui.get_parent()
+	if ui != null:
+		return ui.get_node_or_null("BackButton") as Button
+	return null
+
+
+func _reset_button() -> Button:
+	var ui := get_parent()
+	if ui != null:
+		ui = ui.get_parent()
+	if ui != null:
+		return ui.get_node_or_null("ResetButton") as Button
+	return null
 
 
 static func load_bindings() -> void:
@@ -94,29 +112,8 @@ func _ready() -> void:
 	load_bindings()
 	for i in ACTIONS.size():
 		_add_row(ACTIONS[i], NAMES[i])
-	if Main.using_controller:
-		($UI/BackButton as Button).grab_focus()
-	keyboard_rows.get_parent().follow_focus = false
-	gamepad_rows.get_parent().follow_focus = false
-	var keyboard_scroll := keyboard_rows.get_parent() as ScrollContainer
-	var gamepad_scroll := gamepad_rows.get_parent() as ScrollContainer
-	keyboard_scroll.get_v_scroll_bar().value_changed.connect(_sync_scroll.bind(keyboard_scroll, gamepad_scroll))
-	gamepad_scroll.get_v_scroll_bar().value_changed.connect(_sync_scroll.bind(gamepad_scroll, keyboard_scroll))
+	scroll.follow_focus = false
 	ControllerIcons.input_type_changed.connect(func(_type, _controller): _refresh())
-
-
-var _syncing_scroll: bool = false
-
-
-func _sync_scroll(value: float, from: ScrollContainer, to: ScrollContainer) -> void:
-	if _syncing_scroll or from == to:
-		return
-	var next := int(value)
-	if to.scroll_vertical == next:
-		return
-	_syncing_scroll = true
-	to.scroll_vertical = next
-	_syncing_scroll = false
 
 
 func _exit_tree() -> void:
@@ -127,6 +124,8 @@ func _exit_tree() -> void:
 
 
 func _process(delta: float) -> void:
+	if not is_visible_in_tree():
+		return
 	if listening:
 		_scroll_carry = 0.0
 		_poll_stick_bind()
@@ -145,8 +144,7 @@ func _process(delta: float) -> void:
 
 
 func _current_scroll() -> ScrollContainer:
-	var tabs := $UI/Tabs as TabContainer
-	return tabs.get_tab_control(tabs.current_tab) as ScrollContainer
+	return scroll
 
 
 func _scroll_axis() -> float:
@@ -181,7 +179,7 @@ func _joy_action_axis(action: String, device: int) -> float:
 
 
 func _input(event: InputEvent) -> void:
-	if not listening and _tab_switch(event):
+	if not is_visible_in_tree():
 		return
 	if not listening and _right_scroll(event):
 		return
@@ -197,25 +195,6 @@ func _input(event: InputEvent) -> void:
 	_set_slot(_listen_action, _listen_index, bound)
 	_stop_listen()
 	get_viewport().set_input_as_handled()
-
-
-func _tab_switch(event: InputEvent) -> bool:
-	if not event.is_pressed() or event.is_echo():
-		return false
-	var direction := 0
-	if InputMap.has_action("ui_tab_prev") and event.is_action("ui_tab_prev"):
-		direction = -1
-	elif InputMap.has_action("ui_tab_next") and event.is_action("ui_tab_next"):
-		direction = 1
-	if direction == 0:
-		return false
-	var slot := _find_slot(get_viewport().gui_get_focus_owner())
-	var tabs := $UI/Tabs as TabContainer
-	tabs.current_tab = wrapi(tabs.current_tab + direction, 0, tabs.get_tab_count())
-	if slot.x >= 0:
-		_focus_slot(int(slot.x), int(slot.y))
-	get_viewport().set_input_as_handled()
-	return true
 
 
 func _move_focus(event: InputEvent) -> bool:
@@ -239,14 +218,16 @@ func _move_focus(event: InputEvent) -> bool:
 	_focus_lock_until = now + 50
 	var owner := get_viewport().gui_get_focus_owner()
 	var slot := _find_slot(owner)
+	var back := _back_button()
+	var reset := _reset_button()
 	if slot.x < 0:
-		if owner == $UI/BackButton and step == Vector2i.RIGHT:
-			($UI/ResetButton as Button).grab_focus()
-		elif owner == $UI/ResetButton and step == Vector2i.LEFT:
-			($UI/BackButton as Button).grab_focus()
-		elif owner == $UI/BackButton and step == Vector2i.UP:
+		if owner == back and step == Vector2i.RIGHT and reset != null and reset.visible:
+			reset.grab_focus()
+		elif owner == reset and step == Vector2i.LEFT and back != null:
+			back.grab_focus()
+		elif owner == back and step == Vector2i.UP:
 			_focus_slot(ACTIONS.size() - 1, 0)
-		elif owner == $UI/ResetButton and step == Vector2i.UP:
+		elif owner == reset and step == Vector2i.UP:
 			_focus_slot(ACTIONS.size() - 1, 0)
 		elif owner == null:
 			_focus_slot(0, 0)
@@ -256,9 +237,12 @@ func _move_focus(event: InputEvent) -> bool:
 		if row < 0:
 			pass
 		elif row >= ACTIONS.size():
-			($UI/ResetButton as Button).grab_focus()
+			if reset != null and reset.visible:
+				reset.grab_focus()
+			elif back != null:
+				back.grab_focus()
 		else:
-			_focus_slot(row, clampi(col, 0, 1))
+			_focus_slot(row, clampi(col, 0, 2))
 	get_viewport().set_input_as_handled()
 	return true
 
@@ -270,19 +254,16 @@ func _find_slot(owner: Control) -> Vector2i:
 		var buttons: Array = _buttons[ACTIONS[row]]
 		for i in buttons.size():
 			if buttons[i] == owner:
-				return Vector2i(row, i % 2)
+				return Vector2i(row, i)
 	return Vector2i(-1, -1)
 
 
 func _focus_slot(row: int, column: int) -> void:
-	var tabs := $UI/Tabs as TabContainer
 	var buttons: Array = _buttons[ACTIONS[row]]
-	var index := tabs.current_tab * 2 + column
+	var index := clampi(column, 0, buttons.size() - 1)
 	var button := buttons[index] as Button
 	button.grab_focus()
-	var scroll := tabs.get_tab_control(tabs.current_tab) as ScrollContainer
-	if scroll != null:
-		scroll.ensure_control_visible(button)
+	scroll.ensure_control_visible(button)
 
 
 func _blocks_while_listening(event: InputEvent) -> bool:
@@ -305,10 +286,29 @@ func _stop_listen() -> void:
 	_refresh()
 
 
+func _options_state() -> OptionsState:
+	var n := get_parent()
+	while n != null:
+		if n is OptionsState:
+			return n
+		n = n.get_parent()
+	return null
+
+
 func _set_menu_locked(locked: bool) -> void:
-	($UI/BackButton as Button).disabled = locked
-	($UI/ResetButton as Button).disabled = locked
-	($UI/Tabs as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE if locked else Control.MOUSE_FILTER_STOP
+	var back := _back_button()
+	var reset := _reset_button()
+	if back != null:
+		back.disabled = locked
+	if reset != null:
+		reset.disabled = locked
+	scroll.mouse_filter = Control.MOUSE_FILTER_IGNORE if locked else Control.MOUSE_FILTER_STOP
+	var outer := get_parent() as TabContainer
+	if outer != null:
+		outer.mouse_filter = Control.MOUSE_FILTER_IGNORE if locked else Control.MOUSE_FILTER_STOP
+	var options := _options_state()
+	if options != null:
+		options.set_tabs_locked(locked)
 	for action in _buttons:
 		var buttons: Array = _buttons[action]
 		for i in buttons.size():
@@ -318,10 +318,8 @@ func _set_menu_locked(locked: bool) -> void:
 
 
 func _right_scroll(event: InputEvent) -> bool:
-	var tabs := $UI/Tabs as TabContainer
-	var scroll := tabs.get_child(tabs.current_tab) as ScrollContainer
 	if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_RIGHT:
-		if event.pressed and tabs.get_global_rect().has_point(event.global_position):
+		if event.pressed and scroll.get_global_rect().has_point(event.global_position):
 			_right_drag = true
 			_right_drag_y = event.global_position.y
 			get_viewport().set_input_as_handled()
@@ -337,13 +335,6 @@ func _right_scroll(event: InputEvent) -> bool:
 
 func _add_row(action: String, title: String) -> void:
 	var buttons: Array[Button] = []
-	_add_pair(keyboard_rows, action, title, 0, buttons)
-	_add_pair(gamepad_rows, action, title, 2, buttons)
-	_buttons[action] = buttons
-	_refresh_row(action)
-
-
-func _add_pair(parent: VBoxContainer, action: String, title: String, first: int, buttons: Array[Button]) -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 4)
 	var label_box := MarginContainer.new()
@@ -351,11 +342,11 @@ func _add_pair(parent: VBoxContainer, action: String, title: String, first: int,
 	var label := Label.new()
 	label.text = title
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 20)
+	label.add_theme_font_size_override("font_size", 16)
 	label_box.add_child(label)
 	row.add_child(label_box)
 	var button_size := Vector2.ZERO
-	for i in 2:
+	for i in 3:
 		var button := _ui_button.instantiate() as Button
 		if button_size == Vector2.ZERO:
 			button_size = Vector2(button.offset_right - button.offset_left, button.offset_bottom - button.offset_top)
@@ -380,10 +371,12 @@ func _add_pair(parent: VBoxContainer, action: String, title: String, first: int,
 		icon_rect.offset_bottom = 10.0
 		icon_rect.visible = false
 		button.add_child(icon_rect)
-		button.pressed.connect(_begin_listen.bind(action, first + i))
+		button.pressed.connect(_begin_listen.bind(action, i))
 		row.add_child(button)
 		buttons.append(button)
-	parent.add_child(row)
+	rows.add_child(row)
+	_buttons[action] = buttons
+	_refresh_row(action)
 
 
 func _begin_listen(action: String, index: int) -> void:
@@ -441,7 +434,7 @@ func _refresh() -> void:
 func _refresh_row(action: String) -> void:
 	var buttons: Array = _buttons[action]
 	var row: Array = action_events(action)
-	for i in 4:
+	for i in buttons.size():
 		var button: Button = buttons[i]
 		var icon_rect := button.get_node("BindIcon") as TextureRect
 		button.icon = null
@@ -508,6 +501,8 @@ static func icon_for(ev: InputEvent) -> Texture2D:
 
 
 static func prompt_text(action: String, suffix: String) -> String:
+	if Main.using_touch:
+		return suffix
 	var want_pad := ControllerIcons.get_last_input_type() == ControllerIcons.InputType.CONTROLLER
 	var ev := _first_event(action, want_pad)
 	if ev == null:
