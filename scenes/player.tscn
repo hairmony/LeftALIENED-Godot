@@ -6,8 +6,16 @@
 [node name="Player" type="Node2D" unique_id=350952936]
 position = Vector2(302.4, 310)
 script = ExtResource("1_player")
+turnSpeed = 1080.0
+
+[node name="AimLine" type="Line2D" parent="." unique_id=730294836]
+z_index = 20
+points = PackedVector2Array(0, 0, 0, -800)
+width = 2.0
+default_color = Color(0.80784315, 0.09803922, 0.12941177, 0.20784314)
 
 [node name="Sprite" type="Sprite2D" parent="." unique_id=130183487]
+z_index = 21
 texture_filter = 1
 position = Vector2(17.6, 17.6)
 scale = Vector2(1.1, 1.1)

@@ -130,7 +130,7 @@ func _process(delta: float) -> void:
 		_scroll_carry = 0.0
 		_poll_stick_bind()
 		return
-	var axis := _scroll_axis()
+	var axis := ui_scroll_axis()
 	var scroll := _current_scroll()
 	if scroll == null or absf(axis) < 0.01:
 		_scroll_carry = 0.0
@@ -147,14 +147,14 @@ func _current_scroll() -> ScrollContainer:
 	return scroll
 
 
-func _scroll_axis() -> float:
+static func ui_scroll_axis() -> float:
 	var joy := _joy_scroll_axis()
 	if absf(joy) >= 0.15:
 		return clampf(joy, -1.0, 1.0)
 	return Input.get_axis("ui_text_scroll_up", "ui_text_scroll_down")
 
 
-func _joy_scroll_axis() -> float:
+static func _joy_scroll_axis() -> float:
 	var value := 0.0
 	for device in Input.get_connected_joypads():
 		value += _joy_action_axis("ui_text_scroll_down", device)
@@ -162,7 +162,7 @@ func _joy_scroll_axis() -> float:
 	return value
 
 
-func _joy_action_axis(action: String, device: int) -> float:
+static func _joy_action_axis(action: String, device: int) -> float:
 	var best := 0.0
 	for ev in InputMap.action_get_events(action):
 		if ev is not InputEventJoypadMotion:
