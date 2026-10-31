@@ -14,6 +14,7 @@ extends Node2D
 @onready var musicBar: ProgressBar = $UI/Tabs/Audio/List/MusicRow/MusicWrap/MusicBar
 @onready var sfxBar: ProgressBar = $UI/Tabs/Audio/List/SfxRow/SfxWrap/SfxBar
 @onready var fullscreenToggle: CheckButton = $UI/Tabs/Video/List/WindowRow/FullscreenToggle
+@onready var crosshairButton: OptionButton = $UI/Tabs/Video/List/CrosshairRow/CrosshairButton
 @onready var resetButton: Button = $UI/ResetButton
 @onready var backButton: Button = $UI/BackButton
 @onready var controls_page: ControlsState = $UI/Tabs/Controls
@@ -102,6 +103,32 @@ static func save_window_mode(mode: int) -> void:
 	cf.save(SAVE_PATH)
 
 
+const CROSSHAIR_DYNAMIC: int = 0
+const CROSSHAIR_LASER: int = 1
+const CROSSHAIR_NONE: int = 2
+
+
+static func crosshair() -> int:
+	var cf := ConfigFile.new()
+	if cf.load(SAVE_PATH) != OK:
+		return CROSSHAIR_DYNAMIC
+	if not cf.has_section_key("data", "crosshair"):
+		return CROSSHAIR_DYNAMIC
+	return clampi(int(cf.get_value("data", "crosshair")), CROSSHAIR_DYNAMIC, CROSSHAIR_NONE)
+
+
+static func save_crosshair(n: int) -> void:
+	var cf := ConfigFile.new()
+	cf.load(SAVE_PATH)
+	cf.set_value("data", "crosshair", clampi(n, CROSSHAIR_DYNAMIC, CROSSHAIR_NONE))
+	cf.save(SAVE_PATH)
+
+
+static func hides_play_cursor() -> bool:
+	var mode := crosshair()
+	return mode == CROSSHAIR_LASER or mode == CROSSHAIR_NONE
+
+
 func _ready() -> void:
 	musicSlider.value = Main.current.music_volume
 	sfxSlider.value = Main.current.sfx_volume
@@ -110,6 +137,7 @@ func _ready() -> void:
 	_sync_window_toggles()
 	_fill_ship_options()
 	updateShipButtonText()
+	crosshairButton.select(crosshair())
 	shipPreview.texture = Actor.load_texture(previewShip())
 	# **These lines keep the ship centered inside its background**
 	shipPreview.position = shipPreviewBG.position + shipPreviewBG.size / 2.0
@@ -121,6 +149,9 @@ func _ready() -> void:
 	musicSlider.focus_neighbor_bottom = musicSlider.get_path_to(sfxSlider)
 	sfxSlider.focus_neighbor_top = sfxSlider.get_path_to(musicSlider)
 	sfxSlider.focus_neighbor_bottom = sfxSlider.get_path_to(backButton)
+	fullscreenToggle.focus_neighbor_bottom = fullscreenToggle.get_path_to(crosshairButton)
+	crosshairButton.focus_neighbor_top = crosshairButton.get_path_to(fullscreenToggle)
+	crosshairButton.focus_neighbor_bottom = crosshairButton.get_path_to(backButton)
 	tabs.tab_changed.connect(_on_tab_changed)
 	open_tab(start_tab)
 	_on_tab_changed(tabs.current_tab)
@@ -212,6 +243,8 @@ func resetTab() -> void:
 			controls_page.resetBindings()
 		"Video":
 			_set_window_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+			save_crosshair(CROSSHAIR_DYNAMIC)
+			crosshairButton.select(CROSSHAIR_DYNAMIC)
 		"Audio":
 			musicSlider.value = 1.0
 			sfxSlider.value = 1.0
@@ -229,6 +262,10 @@ func setSfx(v: float) -> void:
 	Main.current.set_sfx_volume(v)
 	save_sfx(v)
 	sfxBar.value = v
+
+
+func selectCrosshair(index: int) -> void:
+	save_crosshair(index)
 
 
 func setFullscreen(on: bool) -> void:

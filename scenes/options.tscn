@@ -175,6 +175,33 @@ theme_override_font_sizes/font_size = 16
 text = "Fullscreen"
 vertical_alignment = 1
 
+[node name="CrosshairRow" type="HBoxContainer" parent="UI/Tabs/Video/List"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/separation = 4
+
+[node name="CrosshairLabel" type="Label" parent="UI/Tabs/Video/List/CrosshairRow"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "Crosshair"
+vertical_alignment = 1
+
+[node name="CrosshairButton" type="OptionButton" parent="UI/Tabs/Video/List/CrosshairRow"]
+custom_minimum_size = Vector2(160, 28)
+layout_mode = 2
+size_flags_horizontal = 0
+theme = ExtResource("3_theme")
+item_count = 3
+popup/item_0/text = "Dynamic"
+popup/item_0/id = 0
+popup/item_1/text = "Laser sight"
+popup/item_1/id = 1
+popup/item_2/text = "None"
+popup/item_2/id = 2
+
 [node name="Audio" type="MarginContainer" parent="UI/Tabs" unique_id=837629811]
 visible = false
 layout_mode = 2
@@ -316,6 +343,7 @@ prompt_action = &"ui_reset"
 [connection signal="pressed" from="UI/AudioTab" to="." method="open_tab" binds= ["Audio"]]
 [connection signal="item_selected" from="UI/Tabs/Gameplay/List/ShipButton" to="." method="selectShip"]
 [connection signal="toggled" from="UI/Tabs/Video/List/WindowRow/FullscreenToggle" to="." method="setFullscreen"]
+[connection signal="item_selected" from="UI/Tabs/Video/List/CrosshairRow/CrosshairButton" to="." method="selectCrosshair"]
 [connection signal="value_changed" from="UI/Tabs/Audio/List/MusicRow/MusicWrap/MusicSlider" to="." method="setMusic"]
 [connection signal="value_changed" from="UI/Tabs/Audio/List/SfxRow/SfxWrap/SfxSlider" to="." method="setSfx"]
 [connection signal="pressed" from="UI/BackButton" to="." method="backToMenu"]

@@ -60,6 +60,7 @@ func _ready() -> void:
 	Input.joy_connection_changed.connect(func(_device, _connected): _choose_pad())
 	using_touch = OS.has_feature("mobile")
 	ControlsState.load_bindings()
+	RunStats.load_run()
 	change_state("menu")
 
 
@@ -80,7 +81,9 @@ func _bind_ui_joypad(action: String, button: JoyButton) -> void:
 
 
 func _process(delta: float) -> void:
-	if Input.mouse_mode == Input.MOUSE_MODE_VISIBLE and mouse_idle_hide_seconds > 0.0:
+	if _play_hides_cursor():
+		Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
+	elif Input.mouse_mode == Input.MOUSE_MODE_VISIBLE and mouse_idle_hide_seconds > 0.0:
 		_mouse_idle += delta
 		if _mouse_idle >= mouse_idle_hide_seconds:
 			Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
@@ -136,7 +139,14 @@ func _foreign_pad(event: InputEvent) -> bool:
 	return false
 
 
+func _play_hides_cursor() -> bool:
+	return PlayState.current != null and not PauseState.isPaused and OptionsState.hides_play_cursor()
+
+
 func _show_mouse() -> void:
+	if _play_hides_cursor():
+		Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
+		return
 	_mouse_idle = 0.0
 	if Input.mouse_mode == Input.MOUSE_MODE_HIDDEN:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -148,7 +158,7 @@ func _input(event: InputEvent) -> void:
 	if _foreign_pad(event):
 		get_viewport().set_input_as_handled()
 		return
-	if _repeat_nav(event):
+	if not _option_popup_visible() and _repeat_nav(event):
 		return
 	if ControlsState.listening:
 		return
@@ -189,6 +199,8 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 	if event.is_action("ui_cancel"):
+		if _option_popup_visible():
+			return
 		var back := _top_button(self, ["BackButton", "CloseButton", "ContinueButton"])
 		if back == null or back.disabled or not back.is_visible_in_tree():
 			return
@@ -199,6 +211,8 @@ func _input(event: InputEvent) -> void:
 		return
 	if event.is_action("ui_accept"):
 		var focus := get_viewport().gui_get_focus_owner()
+		if focus is OptionButton:
+			return
 		if focus is BaseButton:
 			var button := focus as BaseButton
 			if button.disabled or not button.is_visible_in_tree():
@@ -221,10 +235,29 @@ func _keeps_controller_focus(owner: Control) -> bool:
 		return false
 	if owner is BaseButton:
 		return not (owner as BaseButton).disabled
+	if owner is Tree:
+		return true
 	return owner is Range
 
 
+func _option_popup_visible() -> bool:
+	return _find_option_popup(self)
+
+
+func _find_option_popup(node: Node) -> bool:
+	if node is OptionButton:
+		var popup := (node as OptionButton).get_popup()
+		if popup != null and popup.visible:
+			return true
+	for child in node.get_children():
+		if _find_option_popup(child):
+			return true
+	return false
+
+
 func _ensure_button_focus() -> void:
+	if _option_popup_visible():
+		return
 	var owner := get_viewport().gui_get_focus_owner()
 	if _keeps_controller_focus(owner):
 		return
