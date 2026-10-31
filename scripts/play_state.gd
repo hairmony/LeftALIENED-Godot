@@ -155,7 +155,7 @@ func _process(elapsed: float) -> void:
 		if ship != null and ship.swapPhase != 0:
 			ship.advance_swap(elapsed)
 			if ship.exists:
-				ship.aim()
+				ship.aim(elapsed)
 		return
 
 	_scroll_backdrop(elapsed)

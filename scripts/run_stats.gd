@@ -9,6 +9,7 @@ static var classic_stages: Array = []
 static var classic_totals: Dictionary = {}
 static var endless_stages: Array = []
 static var endless_totals: Dictionary = {}
+static var _loaded: bool = false
 
 
 static func empty_totals() -> Dictionary:
@@ -40,16 +41,19 @@ static func mode_for_tab(tab_name: String) -> String:
 
 
 static func save_run(new_kind: String, new_stages: Array, new_totals: Dictionary) -> void:
+	_ensure_loaded()
 	_store(mode_for_kind(new_kind), new_stages, new_totals, true)
 	_write()
 
 
 static func clear(mode: String) -> void:
+	_ensure_loaded()
 	_store(mode, [], empty_totals(), false)
 	_write()
 
 
 static func snapshot(mode: String) -> Dictionary:
+	_ensure_loaded()
 	if mode == ENDLESS:
 		return {
 			"kind": "level",
@@ -64,30 +68,28 @@ static func snapshot(mode: String) -> Dictionary:
 
 
 static func load_run() -> void:
+	_loaded = true
 	var cf := ConfigFile.new()
 	if cf.load(Main.SAVE_PATH) != OK:
 		return
-	var has_split := cf.has_section_key("stats", "classic_stages") or cf.has_section_key("stats", "endless_stages")
-	if has_split:
-		classic_stages = _read_stages(cf, "classic_stages")
-		classic_totals = _read_totals(cf, "classic_totals")
-		endless_stages = _read_stages(cf, "endless_stages")
-		endless_totals = _read_totals(cf, "endless_totals")
-		last = str(cf.get_value("stats", "last", CLASSIC))
-		if last != ENDLESS:
-			last = CLASSIC
-		return
-	var old_kind := str(cf.get_value("stats", "kind", "wave"))
-	var old_stages := _read_stages(cf, "stages")
-	if old_stages.is_empty() and not cf.has_section_key("stats", "stages"):
-		var old_times = cf.get_value("stats", "times", [])
-		if old_times is Array or old_times is PackedFloat32Array:
-			for t in old_times:
-				var row := empty_totals()
-				row["time"] = float(t)
-				old_stages.append(row)
-	var old_totals := _read_totals(cf, "totals")
-	_store(mode_for_kind(old_kind), old_stages, old_totals, true)
+	last = str(cf.get_value("stats", "last", CLASSIC))
+	if last != ENDLESS:
+		last = CLASSIC
+	var classic := _read_pack(cf, CLASSIC)
+	var endless := _read_pack(cf, ENDLESS)
+	classic_stages = classic["stages"]
+	classic_totals = classic["totals"]
+	endless_stages = endless["stages"]
+	endless_totals = endless["totals"]
+	if str(classic_stages) == str(endless_stages):
+		var recovered_classic := _stages_from_file(CLASSIC)
+		var recovered_endless := _stages_from_file(ENDLESS)
+		if not recovered_classic.is_empty() or not recovered_endless.is_empty():
+			if str(recovered_classic) != str(recovered_endless):
+				classic_stages = recovered_classic
+				endless_stages = recovered_endless
+	if not cf.has_section_key("stats", "classic_json"):
+		_write()
 
 
 static func format_duration(seconds: float) -> String:
@@ -107,6 +109,11 @@ static func format_duration(seconds: float) -> String:
 	return "%d.%02d.%02d minutes" % [mins, secs, cs]
 
 
+static func _ensure_loaded() -> void:
+	if not _loaded:
+		load_run()
+
+
 static func _store(mode: String, new_stages: Array, new_totals: Dictionary, set_last: bool) -> void:
 	if mode == ENDLESS:
 		endless_stages = new_stages.duplicate(true)
@@ -118,9 +125,23 @@ static func _store(mode: String, new_stages: Array, new_totals: Dictionary, set_
 		last = mode
 
 
-static func _read_stages(cf: ConfigFile, key: String) -> Array:
+static func _read_pack(cf: ConfigFile, mode: String) -> Dictionary:
+	var json_key := "%s_json" % mode
+	if cf.has_section_key("stats", json_key):
+		var parsed = JSON.parse_string(str(cf.get_value("stats", json_key, "")))
+		if parsed is Dictionary:
+			return {
+				"stages": _as_stages(parsed.get("stages", [])),
+				"totals": _as_totals(parsed.get("totals", {})),
+			}
+	return {
+		"stages": _read_stages(cf, "%s_stages" % mode),
+		"totals": _read_totals(cf, "%s_totals" % mode),
+	}
+
+
+static func _as_stages(stored) -> Array:
 	var stages: Array = []
-	var stored = cf.get_value("stats", key, [])
 	if stored is Array:
 		for row in stored:
 			if row is Dictionary:
@@ -128,24 +149,53 @@ static func _read_stages(cf: ConfigFile, key: String) -> Array:
 	return stages
 
 
-static func _read_totals(cf: ConfigFile, key: String) -> Dictionary:
+static func _as_totals(saved) -> Dictionary:
 	var totals := empty_totals()
-	var saved = cf.get_value("stats", key, {})
 	if saved is Dictionary:
 		for item in totals.keys():
 			totals[item] = int(saved.get(item, 0))
 	return totals
 
 
+static func _read_stages(cf: ConfigFile, key: String) -> Array:
+	return _as_stages(cf.get_value("stats", key, []))
+
+
+static func _read_totals(cf: ConfigFile, key: String) -> Dictionary:
+	return _as_totals(cf.get_value("stats", key, {}))
+
+
+static func _stages_from_file(mode: String) -> Array:
+	if not FileAccess.file_exists(Main.SAVE_PATH):
+		return []
+	var text := FileAccess.get_file_as_string(Main.SAVE_PATH)
+	var token := "%s_stages=" % mode
+	var start := text.find(token)
+	if start < 0:
+		return []
+	start += token.length()
+	var finish := text.find("\n%s_totals=" % mode, start)
+	if finish < 0:
+		finish = text.find("\n", start)
+	if finish < 0:
+		finish = text.length()
+	var parsed = JSON.parse_string(text.substr(start, finish - start).strip_edges())
+	return _as_stages(parsed)
+
+
 static func _write() -> void:
 	var cf := ConfigFile.new()
 	cf.load(Main.SAVE_PATH)
 	cf.set_value("stats", "last", last)
-	cf.set_value("stats", "classic_stages", classic_stages)
-	cf.set_value("stats", "classic_totals", classic_totals)
-	cf.set_value("stats", "endless_stages", endless_stages)
-	cf.set_value("stats", "endless_totals", endless_totals)
-	for key in ["kind", "stages", "totals", "times"]:
+	cf.set_value("stats", "classic_json", JSON.stringify({
+		"stages": classic_stages,
+		"totals": classic_totals,
+	}))
+	cf.set_value("stats", "endless_json", JSON.stringify({
+		"stages": endless_stages,
+		"totals": endless_totals,
+	}))
+	for key in ["kind", "stages", "totals", "times", "classic_stages", "classic_totals", "endless_stages", "endless_totals"]:
 		if cf.has_section_key("stats", key):
 			cf.erase_section_key("stats", key)
 	cf.save(Main.SAVE_PATH)

@@ -6,6 +6,7 @@ extends Actor
 @export var DODGE_SPEED: float = 400 # Speed DURIGN dod40
 @export var shipIntroSpeed: float = 160.0
 @export var shipSwapSpeed: float = 240.0
+@export var turnSpeed: float = 360.0
 @export var PLAYER_SHOTS_PER_SEC: float = 6.0 # How many shots per second
 @export var PLAYER_HEALTH_MAX: int = 3
 @export var MULTISHOT_CHARGE_MAX: float = 20.0 #20 in number of objects killed
@@ -39,6 +40,8 @@ var _trail_scene: PackedScene
 var _shot_scene: PackedScene
 var _super_scene: PackedScene
 var _drone_scene: PackedScene
+
+@onready var aimLine: Line2D = $AimLine
 
 
 func _ready() -> void:
@@ -94,7 +97,7 @@ func update(elapsed: float) -> void:
 		position.x += moveX * PLAYER_SPEED * elapsed
 		position.y += moveY * PLAYER_SPEED * elapsed
 
-	aim()
+	aim(elapsed)
 
 	if isDodging:
 		dodgeTimer += elapsed
@@ -168,7 +171,16 @@ func _joy_action_axis(pad: int, action: String) -> float:
 	return 0.0
 
 
-func aim() -> void:
+func _turn_toward(target_deg: float, elapsed: float) -> void:
+	var diff := wrapf(target_deg - angle, -180.0, 180.0)
+	var step := turnSpeed * elapsed
+	if absf(diff) <= step:
+		set_angle(target_deg)
+	else:
+		set_angle(angle + signf(diff) * step)
+
+
+func aim(elapsed: float = 0.0) -> void:
 	# --- Aiming Logic ---
 
 	# Check for active Gamepad aiming
@@ -179,10 +191,11 @@ func aim() -> void:
 		aim = TouchControls.aim_vector
 	if aim != Vector2.ZERO:
 		# Actively aiming with gamepad
-		set_angle(rad_to_deg(atan2(aim.y, aim.x)) + 90.0)
+		_turn_toward(rad_to_deg(atan2(aim.y, aim.x)) + 90.0, elapsed)
 		lastAimDevice = "gamepad" # Set last device
 		if TouchControls.aim_vector.length() > 0.05:
 			_prev_mouse = get_viewport().get_mouse_position()
+			_update_aim_line()
 			return
 
 	var mouse_position := get_viewport().get_mouse_position()
@@ -200,22 +213,42 @@ func aim() -> void:
 		var center := get_midpoint()
 		var dx: float = mouse_position.x - center.x
 		var dy: float = mouse_position.y - center.y
-		set_angle(rad_to_deg(atan2(dy, dx)) + 90.0)
+		_turn_toward(rad_to_deg(atan2(dy, dx)) + 90.0, elapsed)
 	elif lastAimDevice == "gamepad":
 		# If gamepad was last, the angle was already set when it moved.
 		pass
+	_update_aim_line()
+
+
+func _update_aim_line() -> void:
+	if aimLine == null:
+		return
+	var mode := OptionsState.crosshair()
+	var touch_aim := TouchControls.aim_vector.length() > 0.05
+	var show := alive and exists
+	if mode == OptionsState.CROSSHAIR_NONE:
+		show = false
+	elif mode == OptionsState.CROSSHAIR_DYNAMIC:
+		show = show and (Main.using_controller or touch_aim or lastAimDevice == "gamepad")
+	aimLine.visible = show
+	if not show:
+		return
+	aimLine.position = sprite.position if sprite != null else frame_size() * 0.5
+	var heading := deg_to_rad(angle - 90.0)
+	var dir := Vector2(cos(heading), sin(heading))
+	aimLine.points = PackedVector2Array([dir * 5.0, dir * 800.0])
 
 
 func fly_and_move(elapsed: float) -> void:
 	if swapPhase != 0:
 		advance_swap(elapsed)
-		aim()
+		aim(elapsed)
 	elif not controlsEnabled:
 		position.y -= shipIntroSpeed * elapsed
 		if position.y <= Main.HEIGHT - 50.0:
 			position.y = Main.HEIGHT - 50.0
 			controlsEnabled = true
-		aim()
+		aim(elapsed)
 	else:
 		update(elapsed)
 	if swapPhase == 0:
