@@ -6,9 +6,10 @@ static var aim_vector: Vector2 = Vector2.ZERO
 static var aiming: bool = false
 static var touching: int = 0
 static var deadzone: float = 0.08
+static var shoot_at: float = 0.75
 
 @export_range(0.0, 1.0, 0.01) var stick_deadzone: float = 0.08
-@export_range(0.0, 1.0, 0.01) var fire_threshold: float = 0.01
+@export_range(0.0, 1.0, 0.01) var fire_threshold: float = 0.75
 
 var _touches: Dictionary = {}
 
@@ -19,6 +20,7 @@ var _touches: Dictionary = {}
 
 func _ready() -> void:
 	deadzone = stick_deadzone
+	shoot_at = fire_threshold
 	visible = DisplayServer.is_touchscreen_available()
 	move_stick.changed.connect(_apply_move)
 	aim_stick.changed.connect(_apply_aim)
@@ -26,6 +28,7 @@ func _ready() -> void:
 
 func _process(_elapsed: float) -> void:
 	deadzone = stick_deadzone
+	shoot_at = fire_threshold
 	var show: bool = DisplayServer.is_touchscreen_available()
 	if PauseState.isPaused or (PlayState.current != null and (PlayState.current.choosing_upgrade() or PlayState.current.gameOverText.visible)):
 		show = false
@@ -68,8 +71,6 @@ func _input(event: InputEvent) -> void:
 		else:
 			_touches.erase(event.index)
 		touching = _touches.size()
-		if aim_vector.length() < fire_threshold:
-			Input.action_release("shoot")
 
 
 func _update_super() -> void:
