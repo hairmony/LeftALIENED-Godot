@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://do1snn50fttv4"]
 
-[ext_resource type="Script" uid="uid://dwp5tijkt1i6h" path="res://scripts/pause_state.gd" id="1_pause"]
+[ext_resource type="Script" uid="uid://dwp5tijkt1i6h" path="res://scripts/menu_pause.gd" id="1_pause"]
 [ext_resource type="PackedScene" uid="uid://jc5fdv3ufugl" path="res://scenes/ui_button.tscn" id="2_btn"]
 
 [node name="PauseState" type="Node" unique_id=1020916425]

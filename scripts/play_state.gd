@@ -16,8 +16,10 @@ static var current: PlayState
 @onready var backdrop2: Sprite2D = $Backdrop2
 @onready var scoreText: Label = $HUD/UI/ScoreText
 @onready var multiplierText: Label = $HUD/UI/MultiplierText
-@onready var multishotText: Label = $HUD/UI/MultishotText
-@onready var healthText: Label = $HUD/UI/HealthText
+@onready var superBar: ProgressBar = $HUD/UI/SuperBar
+@onready var superPrompt: TextureRect = $HUD/UI/SuperPrompt
+@onready var healthText: ProgressBar = $HUD/UI/HealthText
+@onready var armorCount: Label = $HUD/UI/HealthText/ArmorCount
 @onready var gameOverText: Label = $HUD/UI/GameOverText
 @onready var gameWonText: Label = $HUD/UI/GameWonText
 @onready var waveText: Label = $HUD/UI/WaveText
@@ -199,11 +201,14 @@ func _process(elapsed: float) -> void:
 	multiplierText.modulate = combo_color
 
 	# controlsText will blink when visible
-	if controlsText.visible:
+	if controlsText.visible or superPrompt.visible:
 		blinkTimer += elapsed # increment every frame
-		controlsText.modulate.a = 0.3 + 0.7 * (sin(blinkTimer * 6.0) * 0.5 + 0.5)
+		var flash := 0.3 + 0.7 * (sin(blinkTimer * 6.0) * 0.5 + 0.5)
+		controlsText.modulate.a = flash if controlsText.visible else 1.0
+		superPrompt.modulate.a = flash if superPrompt.visible else 1.0
 	else:
 		controlsText.modulate.a = 1.0
+		superPrompt.modulate.a = 1.0
 		blinkTimer = 0.0
 
 	# Debug controls
@@ -374,8 +379,7 @@ func _restart() -> void:
 func _refresh_prompt() -> void:
 	if _restart_shown:
 		controlsText.text = _restart_prompt()
-	elif controlsText.visible:
-		controlsText.text = _super_prompt()
+	updateMultishotText()
 
 
 func _super_prompt() -> String:
@@ -486,6 +490,8 @@ func collideBoss(object1: Actor, object2: Actor) -> void:
 		updateMultishotText()
 		updateScoreText()
 		ship.health += 1
+		if ship.health > ship.PLAYER_HEALTH_MAX:
+			ship.PLAYER_HEALTH_MAX = ship.health
 		updateHealthText()
 		on_boss_cleared()
 
@@ -625,24 +631,31 @@ func debug_skip() -> void:
 
 
 func updateMultishotText() -> void:
-	if not ship.superUnlocked:
-		multishotText.visible = false
+	if ship == null or not ship.superUnlocked:
+		superBar.visible = false
+		superPrompt.visible = false
 		if not _restart_shown:
 			controlsText.visible = false
 		return
-	multishotText.visible = true
+	superBar.visible = true
+	superBar.max_value = ship.MULTISHOT_CHARGE_MAX
+	superBar.value = ship.multishotCharge
+	var ready := ship.multishotCharge >= ship.MULTISHOT_CHARGE_MAX
+	superBar.modulate = Color.WHITE if ready else Color(1, 1, 1, 0.35)
 	if _restart_shown:
-		pass
-	elif ship.multishotCharge >= ship.MULTISHOT_CHARGE_MAX:
-		controlsText.text = _super_prompt()
-		controlsText.visible = true
+		superPrompt.visible = false
 	else:
 		controlsText.visible = false
-	multishotText.text = "Super: " + str(int(ship.multishotCharge)) + "/" + str(int(ship.MULTISHOT_CHARGE_MAX))
+		superPrompt.visible = ready and superPrompt.texture != null
 
 
 func updateHealthText() -> void:
-	healthText.text = "Armor: " + str(ship.health)
+	if ship.health > ship.PLAYER_HEALTH_MAX:
+		ship.PLAYER_HEALTH_MAX = ship.health
+	var armor_max := maxi(ship.PLAYER_HEALTH_MAX, 1)
+	healthText.max_value = armor_max
+	healthText.value = ship.health
+	armorCount.text = str(ship.health) + "/" + str(armor_max)
 
 
 # Moved score calculation logic to collision function

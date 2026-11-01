@@ -1,13 +1,13 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://c8gcrh6v0tbs4"]
 
-[ext_resource type="Script" path="res://scripts/enemy_projectile.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/images/Projectile3.png" id="2_tex"]
+[ext_resource type="Script" uid="uid://dqsevafp56mr2" path="res://scripts/projectile_enemy.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://x7xl4tl0dvk4" path="res://assets/images/Projectile3.png" id="2_tex"]
 
-[node name="EnemyProjectile" type="Node2D"]
+[node name="EnemyProjectile" type="Node2D" unique_id=1272630025]
 script = ExtResource("1_script")
 speed = 125.0
 angleOffset = 0.0
 
-[node name="Sprite" type="Sprite2D" parent="."]
+[node name="Sprite" type="Sprite2D" parent="." unique_id=2033703116]
 texture_filter = 1
 texture = ExtResource("2_tex")

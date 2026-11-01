@@ -3,6 +3,9 @@
 [ext_resource type="Script" uid="uid://c2oavb4q01qo" path="res://scripts/play_state.gd" id="1_play"]
 [ext_resource type="Texture2D" uid="uid://dn4y4c305uhd8" path="res://assets/images/LevelBackground.png" id="2_bg"]
 [ext_resource type="PackedScene" path="res://scenes/touch_controls.tscn" id="3_touch"]
+[ext_resource type="Theme" uid="uid://r4ha0qas57o7" path="res://assets/ui/button_theme.tres" id="4_theme"]
+[ext_resource type="Texture2D" uid="uid://df46f3e70ahuf" path="res://assets/ui/Super.png" id="5_super"]
+[ext_resource type="Script" path="res://scripts/prompt_icon.gd" id="6_icon"]
 
 [node name="Play" type="Node2D" unique_id=1455872738]
 script = ExtResource("1_play")
@@ -53,23 +56,86 @@ offset_bottom = 45.0
 theme_override_font_sizes/font_size = 20
 text = "2x"
 
-[node name="MultishotText" type="Label" parent="HUD/UI" unique_id=120601706]
+[node name="SuperPrompt" type="TextureRect" parent="HUD/UI"]
+visible = false
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 0
+offset_left = 589.0
+offset_top = 279.0
+offset_right = 609.0
+offset_bottom = 299.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("6_icon")
+prompt_action = &"super"
+
+[node name="SuperBar" type="ProgressBar" parent="HUD/UI"]
+layout_mode = 0
+offset_left = 583.0
+offset_top = 303.0
+offset_right = 615.0
+offset_bottom = 335.0
+mouse_filter = 2
+theme = ExtResource("4_theme")
+max_value = 20.0
+value = 0.0
+fill_mode = 3
+show_percentage = false
+
+[node name="SuperIcon" type="TextureRect" parent="HUD/UI/SuperBar"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 10.0
+offset_bottom = 10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("5_super")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ArmorLabel" type="Label" parent="HUD/UI"]
 layout_mode = 0
 offset_left = 25.0
-offset_top = 45.0
-offset_right = 220.0
-offset_bottom = 65.0
+offset_top = 295.0
+offset_right = 135.0
+offset_bottom = 315.0
 theme_override_font_sizes/font_size = 20
-text = "Super: 0/20"
+text = "Armor"
+vertical_alignment = 1
 
-[node name="HealthText" type="Label" parent="HUD/UI" unique_id=1575744188]
+[node name="HealthText" type="ProgressBar" parent="HUD/UI" unique_id=1575744188]
 layout_mode = 0
 offset_left = 25.0
 offset_top = 315.0
-offset_right = 220.0
+offset_right = 135.0
 offset_bottom = 335.0
+mouse_filter = 2
+theme = ExtResource("4_theme")
+max_value = 3.0
+value = 3.0
+show_percentage = false
+
+[node name="ArmorCount" type="Label" parent="HUD/UI/HealthText"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.9231838, 0.92074907, 0.9167248, 1)
 theme_override_font_sizes/font_size = 20
-text = "Armor: 3"
+text = "3/3"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="GameOverText" type="Label" parent="HUD/UI" unique_id=1885239051]
 visible = false

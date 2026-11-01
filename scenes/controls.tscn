@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://6epb5ap77ytl"]
 
-[ext_resource type="Script" uid="uid://cjm82710n8pd2" path="res://scripts/controls_state.gd" id="1_controls"]
+[ext_resource type="Script" uid="uid://cjm82710n8pd2" path="res://scripts/menu_controls.gd" id="1_controls"]
 
 [node name="Controls" type="Control" unique_id=1888016823]
 layout_mode = 3
@@ -23,7 +23,6 @@ theme_override_constants/margin_top = 8
 [node name="Scroll" type="ScrollContainer" parent="Margin" unique_id=1411460965]
 layout_mode = 2
 horizontal_scroll_mode = 0
-follow_focus = false
 
 [node name="Rows" type="VBoxContainer" parent="Margin/Scroll" unique_id=500787379]
 layout_mode = 2
