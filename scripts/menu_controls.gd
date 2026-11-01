@@ -462,6 +462,7 @@ func _set_slot(action: String, index: int, event: InputEvent) -> void:
 			changed = true
 		if changed:
 			_write_action(other, row)
+	ControllerIcons.refresh()
 
 
 func _event_for_slot(event: InputEvent, index: int) -> InputEvent:
@@ -634,3 +635,4 @@ func resetBindings() -> void:
 		Main.current._bind_ui_joypad("ui_cancel", JOY_BUTTON_B)
 	GuideControls.restore_defaults()
 	_refresh()
+	ControllerIcons.refresh()

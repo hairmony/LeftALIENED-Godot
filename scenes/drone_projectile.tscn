@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://chlbg0b3lpedl"]
 
-[ext_resource type="Script" uid="uid://vp2r5cm51v62" path="res://scripts/drone_projectile.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://vp2r5cm51v62" path="res://scripts/projectile_drone.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://dev48x1xx8paj" path="res://assets/images/Projectile5.png" id="2_kgbvu"]
 
 [node name="DroneProjectile" type="Node2D" unique_id=303395245]

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://c6yrxk7nh645j"]
 
 [ext_resource type="PackedScene" uid="uid://bxgamjsiwysaj" path="res://scenes/play.tscn" id="1_play"]
-[ext_resource type="Script" uid="uid://bg7agnhai2t6a" path="res://scripts/classic_state.gd" id="2_classic"]
+[ext_resource type="Script" uid="uid://bg7agnhai2t6a" path="res://scripts/play_classic.gd" id="2_classic"]
 
 [node name="Classic" unique_id=496385625 instance=ExtResource("1_play")]
 script = ExtResource("2_classic")
