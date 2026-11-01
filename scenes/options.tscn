@@ -1,12 +1,12 @@
 [gd_scene format=3 uid="uid://fnu004kbliyq"]
 
-[ext_resource type="Script" uid="uid://cbfviiao7foxi" path="res://scripts/options_state.gd" id="1_options"]
+[ext_resource type="Script" uid="uid://cbfviiao7foxi" path="res://scripts/menu_options.gd" id="1_options"]
 [ext_resource type="Theme" uid="uid://r4ha0qas57o7" path="res://assets/ui/button_theme.tres" id="3_theme"]
 [ext_resource type="Texture2D" uid="uid://dtr6c65gd1l4o" path="res://assets/images/Ship.png" id="4_ship"]
 [ext_resource type="PackedScene" uid="uid://jc5fdv3ufugl" path="res://scenes/ui_button.tscn" id="5_btn"]
 [ext_resource type="PackedScene" uid="uid://6epb5ap77ytl" path="res://scenes/controls.tscn" id="6_controls"]
 [ext_resource type="Script" uid="uid://c77s65yrqn41r" path="res://scripts/prompt_button.gd" id="7_prompt"]
-[ext_resource type="Script" path="res://scripts/prompt_icon.gd" id="8_icon"]
+[ext_resource type="Script" uid="uid://cf51oe1xiamyw" path="res://scripts/prompt_icon.gd" id="8_icon"]
 
 [node name="OptionsState" type="Node2D" unique_id=433388426]
 script = ExtResource("1_options")
@@ -25,7 +25,7 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 6
 
-[node name="TabPrev" type="TextureRect" parent="UI"]
+[node name="TabPrev" type="TextureRect" parent="UI" unique_id=1056791217]
 layout_mode = 0
 offset_left = 25.0
 offset_top = 20.0
@@ -73,7 +73,7 @@ offset_bottom = 44.0
 toggle_mode = true
 text = "Audio"
 
-[node name="TabNext" type="TextureRect" parent="UI"]
+[node name="TabNext" type="TextureRect" parent="UI" unique_id=947155025]
 layout_mode = 0
 offset_left = 493.0
 offset_top = 20.0
@@ -175,13 +175,13 @@ theme_override_font_sizes/font_size = 16
 text = "Fullscreen"
 vertical_alignment = 1
 
-[node name="CrosshairRow" type="HBoxContainer" parent="UI/Tabs/Video/List"]
+[node name="CrosshairRow" type="HBoxContainer" parent="UI/Tabs/Video/List" unique_id=850113301]
 custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
 size_flags_horizontal = 0
 theme_override_constants/separation = 4
 
-[node name="CrosshairLabel" type="Label" parent="UI/Tabs/Video/List/CrosshairRow"]
+[node name="CrosshairLabel" type="Label" parent="UI/Tabs/Video/List/CrosshairRow" unique_id=1668650262]
 layout_mode = 2
 size_flags_horizontal = 0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
@@ -189,7 +189,7 @@ theme_override_font_sizes/font_size = 16
 text = "Crosshair"
 vertical_alignment = 1
 
-[node name="CrosshairButton" type="OptionButton" parent="UI/Tabs/Video/List/CrosshairRow"]
+[node name="CrosshairButton" type="OptionButton" parent="UI/Tabs/Video/List/CrosshairRow" unique_id=1720880566]
 custom_minimum_size = Vector2(160, 28)
 layout_mode = 2
 size_flags_horizontal = 0

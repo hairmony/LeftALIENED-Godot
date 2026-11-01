@@ -1,8 +1,9 @@
 [gd_scene format=3 uid="uid://b3fsvm7ohrfgm"]
 
 [ext_resource type="PackedScene" uid="uid://bxgamjsiwysaj" path="res://scenes/play.tscn" id="1_play"]
-[ext_resource type="Script" uid="uid://clm35oq4xiih3" path="res://scripts/endless_state.gd" id="2_endless"]
+[ext_resource type="Script" uid="uid://clm35oq4xiih3" path="res://scripts/play_endless.gd" id="2_endless"]
 [ext_resource type="PackedScene" uid="uid://jc5fdv3ufugl" path="res://scenes/ui_button.tscn" id="3_btn"]
+[ext_resource type="Theme" uid="uid://r4ha0qas57o7" path="res://assets/ui/button_theme.tres" id="4_theme"]
 
 [node name="Endless" unique_id=586794702 instance=ExtResource("1_play")]
 script = ExtResource("2_endless")
@@ -51,24 +52,29 @@ ENDLESS_ASTEROID_DRIFT = 50.0
 MULTIPLIER_MAX = 5
 MULTIPLIER_DECAY = 0.65
 
-[node name="XpBar" type="ColorRect" parent="HUD/UI" parent_id_path=PackedInt32Array(1735770479) index="8" unique_id=1530735562]
+[node name="XpBar" type="ProgressBar" parent="HUD/UI" parent_id_path=PackedInt32Array(1735770479) index="8" unique_id=1530735562]
 layout_mode = 0
 offset_left = 220.0
-offset_top = 31.0
+offset_top = 25.0
 offset_right = 420.0
-offset_bottom = 39.0
+offset_bottom = 45.0
 mouse_filter = 2
-color = Color(0.12, 0.12, 0.12, 1)
+theme = ExtResource("4_theme")
+max_value = 50.0
+show_percentage = false
 
-[node name="Fill" type="ColorRect" parent="HUD/UI/XpBar" index="0" unique_id=1426895847]
+[node name="XpNow" type="Label" parent="HUD/UI/XpBar" index="0" unique_id=12256520]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 2
-color = Color(0.807843, 0.098039, 0.129412, 1)
+theme_override_colors/font_color = Color(0.9231838, 0.92074907, 0.9167248, 1)
+theme_override_font_sizes/font_size = 20
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="XpLevel" type="Label" parent="HUD/UI" parent_id_path=PackedInt32Array(1735770479) index="9" unique_id=631428629]
 layout_mode = 0
@@ -131,7 +137,7 @@ offset_right = 560.0
 offset_bottom = 45.0
 theme_override_colors/font_color = Color(0.9231838, 0.92074907, 0.9167248, 1)
 theme_override_font_sizes/font_size = 20
-text = "0/50"
+text = "50"
 vertical_alignment = 1
 
 [connection signal="pressed" from="HUD/UI/LevelUp/SuperButton" to="." method="_pick_super"]

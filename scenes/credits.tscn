@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://v1fbci6wtycn"]
 
-[ext_resource type="Script" uid="uid://qrp63g24indq" path="res://scripts/credits_state.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://qrp63g24indq" path="res://scripts/menu_credits.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://book6e4gp83or" path="res://scenes/credits_label.tscn" id="2_label"]
 [ext_resource type="PackedScene" uid="uid://jc5fdv3ufugl" path="res://scenes/ui_button.tscn" id="3_btn"]
-[ext_resource type="Script" path="res://scripts/prompt_button.gd" id="4_prompt"]
+[ext_resource type="Script" uid="uid://c77s65yrqn41r" path="res://scripts/prompt_button.gd" id="4_prompt"]
 
 [node name="Credits" type="Control" unique_id=1368551242]
 layout_mode = 3
@@ -56,6 +56,5 @@ offset_right = 135.0
 offset_bottom = 336.0
 text = "Back"
 script = ExtResource("4_prompt")
-prompt_action = &"ui_cancel"
 
 [connection signal="pressed" from="BackButton" to="." method="backToMenu"]

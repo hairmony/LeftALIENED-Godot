@@ -56,8 +56,8 @@ var _level: int = 0
 var _pending: int = 0
 
 @onready var timerText: Label = $HUD/UI/TimerText
-@onready var xpBar: ColorRect = $HUD/UI/XpBar
-@onready var xpFill: ColorRect = $HUD/UI/XpBar/Fill
+@onready var xpBar: ProgressBar = $HUD/UI/XpBar
+@onready var xpNow: Label = $HUD/UI/XpBar/XpNow
 @onready var xpLevel: Label = $HUD/UI/XpLevel
 @onready var xpCount: Label = $HUD/UI/XpCount
 @onready var levelUp: Control = $HUD/UI/LevelUp
@@ -301,10 +301,11 @@ func _xp_goal() -> float:
 
 func _draw_xp() -> void:
 	var goal: float = maxf(_xp_goal(), 1.0)
-	xpFill.anchor_right = clampf(_xp / goal, 0.0, 1.0)
-	xpFill.offset_right = 0.0
+	xpBar.max_value = goal
+	xpBar.value = _xp
 	xpLevel.text = "LVL " + str(_level)
-	xpCount.text = str(int(_xp)) + "/" + str(int(goal))
+	xpNow.text = str(int(_xp))
+	xpCount.text = str(int(goal))
 
 
 func tick_mode(elapsed: float) -> void:

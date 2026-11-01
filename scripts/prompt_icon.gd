@@ -9,6 +9,7 @@ extends TextureRect
 
 
 func _ready() -> void:
+	custom_minimum_size = Vector2(20, 20)
 	expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -20,16 +21,9 @@ func _refresh_prompt() -> void:
 	var tex: Texture2D = null
 	if not Main.using_touch and prompt_action != &"" and InputMap.has_action(prompt_action):
 		var pad := ControllerIcons.get_last_input_type() == ControllerIcons.InputType.CONTROLLER
-		var type := ControllerIcons.InputType.CONTROLLER if pad else ControllerIcons.InputType.KEYBOARD_MOUSE
-		if _has_events(pad):
-			tex = ControllerIcons.parse_path(str(prompt_action), type) as Texture2D
+		var ev := ControlsState._first_event(str(prompt_action), pad)
+		if ev == null:
+			ev = ControlsState._first_event(str(prompt_action), not pad)
+		tex = ControlsState.icon_for(ev)
 	texture = tex
 	visible = tex != null
-
-
-func _has_events(pad: bool) -> bool:
-	for ev in InputMap.action_get_events(prompt_action):
-		var is_pad := ev is InputEventJoypadButton or ev is InputEventJoypadMotion
-		if is_pad == pad:
-			return true
-	return false

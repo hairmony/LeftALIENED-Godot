@@ -1,12 +1,12 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://bv8a7wdx2dp0e"]
 
-[ext_resource type="Script" path="res://scripts/boss_projectile.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/images/Projectile4.png" id="2_tex"]
+[ext_resource type="Script" uid="uid://b113e4tcyvlss" path="res://scripts/projectile_boss.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://p1pphmlkx34a" path="res://assets/images/Projectile4.png" id="2_tex"]
 
-[node name="BossProjectile" type="Node2D"]
+[node name="BossProjectile" type="Node2D" unique_id=531759871]
 script = ExtResource("1_script")
 speed = 100.0
 
-[node name="Sprite" type="Sprite2D" parent="."]
+[node name="Sprite" type="Sprite2D" parent="." unique_id=193504546]
 texture_filter = 1
 texture = ExtResource("2_tex")

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b4pfhglxegpne"]
 
-[ext_resource type="Script" uid="uid://bq2wetfw7057t" path="res://scripts/touch_controls.gd" id="1_touch"]
-[ext_resource type="Script" uid="uid://bs75qeip8jwds" path="res://scripts/touch_stick.gd" id="2_stick"]
+[ext_resource type="Script" uid="uid://bq2wetfw7057t" path="res://scripts/touch_buttons.gd" id="1_touch"]
+[ext_resource type="Script" uid="uid://bs75qeip8jwds" path="res://scripts/touch_sticks.gd" id="2_stick"]
 [ext_resource type="PackedScene" uid="uid://jc5fdv3ufugl" path="res://scenes/ui_button.tscn" id="3_btn"]
 [ext_resource type="Texture2D" uid="uid://dtjgupr4afkqe" path="res://assets/ui/Dodge.png" id="4_dodge"]
 [ext_resource type="Texture2D" uid="uid://df46f3e70ahuf" path="res://assets/ui/Super.png" id="5_super"]
@@ -9,7 +9,6 @@
 [node name="TouchControls" type="CanvasLayer" unique_id=1046092892]
 layer = 5
 script = ExtResource("1_touch")
-fire_threshold = 0.75
 
 [node name="UI" type="Control" parent="." unique_id=1817842403]
 layout_mode = 3
@@ -31,7 +30,6 @@ offset_right = 215.0
 offset_bottom = -33.0
 grow_vertical = 0
 script = ExtResource("2_stick")
-radius = 18.75
 
 [node name="AimZone" type="Control" parent="UI" unique_id=277350056]
 layout_mode = 1
@@ -47,7 +45,6 @@ offset_bottom = -33.0
 grow_horizontal = 0
 grow_vertical = 0
 script = ExtResource("2_stick")
-radius = 18.75
 
 [node name="Actions" type="Control" parent="UI" unique_id=1847293847]
 layout_mode = 1
@@ -61,6 +58,7 @@ offset_top = -60.0
 offset_right = 131.0
 offset_bottom = -34.0
 grow_horizontal = 2
+grow_vertical = 0
 mouse_filter = 2
 
 [node name="DodgeButton" parent="UI/Actions" unique_id=694560326 instance=ExtResource("3_btn")]
